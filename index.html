@@ -2,984 +2,1438 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>星座运势 - 每日星象指引</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>星座运势 - 观星象 · 知吉凶 · 顺天时</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
---bg-primary:#080810;--bg-card:rgba(18,18,32,0.85);--bg-card-hover:rgba(25,25,45,0.9);
---gold:#D4AF37;--gold-light:#F0D68A;--gold-dim:#8B7D3C;--gold-dark:#a08040;
---purple:#6B4C9A;--purple-light:#9B7ED8;
---text:#F5F0E8;--text-dim:#A09880;--text-bright:#fff8e8;
---border:rgba(212,175,55,0.2);--shadow:0 8px 32px rgba(0,0,0,0.6);
---glass:rgba(18,18,32,0.7);--glass-border:rgba(212,175,55,0.15);
+--bg-primary:#080810;--bg-secondary:#0c0c1a;
+--bg-card:rgba(16,16,32,0.75);--bg-card-hover:rgba(24,24,48,0.85);
+--gold:#D4AF37;--gold-light:#F0D68A;--gold-dim:#8B7D3C;--gold-dark:#a08040;--gold-glow:rgba(212,175,55,0.35);
+--purple:#6B4C9A;--purple-light:#9B7ED8;--purple-dim:rgba(107,76,154,0.3);
+--text:#F5F0E8;--text-dim:#A09880;--text-bright:#fff8e8;--text-muted:#706858;
+--border:rgba(212,175,55,0.18);--shadow:0 8px 32px rgba(0,0,0,0.6);
+--glass:rgba(16,16,36,0.65);--glass-border:rgba(212,175,55,0.12);
 --fire:#E25822;--earth:#8B6914;--air:#4A90D9;--water:#2E8B8B;
+--radius:16px;--radius-sm:10px;--radius-xs:6px;
 }
 @font-face{font-family:'kai';src:local('KaiTi'),local('楷体'),local('STKaiti')}
+html{scroll-behavior:smooth}
 body{
-font-family:'Microsoft YaHei','PingFang SC',sans-serif;
+font-family:'Microsoft YaHei','PingFang SC','Hiragino Sans GB',sans-serif;
 background:var(--bg-primary);color:var(--text);
-min-height:100vh;line-height:1.8;font-size:16px;
-background-image:
-  radial-gradient(ellipse at 20% 0%,rgba(107,76,154,0.08) 0%,transparent 50%),
-  radial-gradient(ellipse at 80% 100%,rgba(212,175,55,0.04) 0%,transparent 50%);
+min-height:100vh;line-height:1.8;font-size:15px;
+overflow-x:hidden;
 }
+
+/* Canvas for star animation */
+#starCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* Noise overlay */
 body::before{
 content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;
-background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+opacity:0.025;
+background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Stars */
-@keyframes twinkle{0%,100%{opacity:0.3}50%{opacity:1}}
-.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
-.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:twinkle ease-in-out infinite}
+.container{max-width:480px;margin:0 auto;padding:12px 16px;position:relative;z-index:1}
 
-.container{max-width:480px;margin:0 auto;padding:16px;position:relative;z-index:1}
+/* Back nav */
+.back-nav{padding:8px 0}
+.back-nav a{
+color:var(--gold-dim);text-decoration:none;font-size:0.9em;letter-spacing:1px;
+transition:color 0.3s;display:inline-flex;align-items:center;gap:6px;
+}
+.back-nav a:hover{color:var(--gold)}
 
 /* Header */
-.header{text-align:center;padding:24px 0 16px}
-.header .icon{font-size:2.2em;display:block;margin-bottom:4px;filter:drop-shadow(0 0 12px rgba(212,175,55,0.4))}
+.header{text-align:center;padding:20px 0 12px}
+.header .icon{font-size:2.4em;display:block;margin-bottom:2px;filter:drop-shadow(0 0 16px rgba(212,175,55,0.5))}
 .header h1{
-font-family:'kai',serif;font-size:2em;color:var(--gold);letter-spacing:8px;
-text-shadow:0 0 30px rgba(212,175,55,0.3);
+font-family:'kai',serif;font-size:2.1em;color:var(--gold);letter-spacing:10px;
+text-shadow:0 0 30px rgba(212,175,55,0.3);font-weight:normal;
 }
-.header .sub{color:var(--text-dim);font-size:0.85em;letter-spacing:3px;margin-top:4px}
-.divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);margin:12px 0}
+.header .sub{color:var(--text-dim);font-size:0.82em;letter-spacing:4px;margin-top:2px}
 
-/* Date display */
+/* Date bar */
 .date-bar{
-text-align:center;padding:10px;color:var(--gold-light);font-size:0.9em;letter-spacing:2px;
-background:rgba(212,175,55,0.05);border-radius:12px;border:1px solid var(--glass-border);margin-bottom:16px;
+text-align:center;padding:10px 16px;margin:8px 0 16px;
+background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-sm);
+backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+font-size:0.85em;color:var(--text-dim);letter-spacing:1px;
 }
+.date-bar .lunar{color:var(--gold-dim);margin-left:8px}
 
-/* Sign selector grid */
-.sign-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-.sign-btn{
-background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;
-padding:10px 4px;text-align:center;cursor:pointer;transition:all 0.3s;
-}
-.sign-btn:hover,.sign-btn.active{
-background:rgba(212,175,55,0.12);border-color:var(--gold-dim);
-box-shadow:0 0 20px rgba(212,175,55,0.15);
-}
-.sign-btn .emoji{font-size:1.6em;display:block;margin-bottom:2px}
-.sign-btn .name{font-size:0.8em;color:var(--text-dim)}
-.sign-btn.active .name{color:var(--gold-light)}
-.sign-btn .date{font-size:0.6em;color:var(--text-dim);opacity:0.6}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);margin:16px 0}
+.divider-subtle{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.1),transparent);margin:12px 0}
 
-/* Sign info card */
-.sign-info{
-background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;
-padding:20px;margin-bottom:16px;display:none;
+/* Section titles */
+.section-title{
+font-family:'kai',serif;font-size:1.25em;color:var(--gold);text-align:center;
+letter-spacing:5px;margin:20px 0 14px;position:relative;
 }
-.sign-info.show{display:block}
-.sign-info .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.sign-info .big-emoji{font-size:3em}
-.sign-info .meta h2{font-family:'kai',serif;font-size:1.5em;color:var(--gold);letter-spacing:4px}
-.sign-info .meta .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.sign-info .meta .tag{
-font-size:0.7em;padding:2px 8px;border-radius:20px;
-background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);color:var(--gold-light);
+.section-title::before,.section-title::after{
+content:'';position:absolute;top:50%;height:1px;width:40px;
+background:linear-gradient(90deg,transparent,var(--gold-dim));
 }
-.element-fire .tag.el{background:rgba(226,88,34,0.15);border-color:rgba(226,88,34,0.3);color:#ff8a5c}
-.element-earth .tag.el{background:rgba(139,105,20,0.15);border-color:rgba(139,105,20,0.3);color:#d4a844}
-.element-air .tag.el{background:rgba(74,144,217,0.15);border-color:rgba(74,144,217,0.3);color:#7cb8f0}
-.element-water .tag.el{background:rgba(46,139,139,0.15);border-color:rgba(46,139,139,0.3);color:#5ccaca}
+.section-title::before{right:calc(50% + 4.5em);transform:scaleX(-1)}
+.section-title::after{left:calc(50% + 4.5em)}
 
-/* Lucky items row */
-.lucky-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.lucky-item{
-flex:1;min-width:70px;text-align:center;padding:8px 4px;
-background:rgba(212,175,55,0.05);border-radius:10px;border:1px solid var(--glass-border);
+/* Glass card base */
+.glass-card{
+background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);
+backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+padding:16px;margin-bottom:14px;
+transition:all 0.3s ease;
 }
-.lucky-item .label{font-size:0.65em;color:var(--text-dim)}
-.lucky-item .val{font-size:0.85em;color:var(--gold-light);margin-top:2px}
+.glass-card:hover{border-color:rgba(212,175,55,0.25)}
 
-/* Tab bar */
-.tab-bar{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tab-bar::-webkit-scrollbar{display:none}
-.tab{
-flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:0.85em;cursor:pointer;
-background:var(--glass);border:1px solid var(--glass-border);color:var(--text-dim);
-transition:all 0.3s;white-space:nowrap;
-}
-.tab.active{background:rgba(212,175,55,0.15);border-color:var(--gold-dim);color:var(--gold-light)}
-.tab .lock{font-size:0.75em;margin-left:2px;opacity:0.5}
-
-/* Rating display */
-.rating-section{margin-bottom:16px}
-.overall{
-text-align:center;padding:20px;
-background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(107,76,154,0.08));
-border-radius:16px;border:1px solid var(--glass-border);margin-bottom:12px;
-}
-.overall .score{font-size:2.4em;margin-bottom:4px}
-.overall .label{font-size:0.85em;color:var(--text-dim);letter-spacing:2px}
-.overall .desc{font-size:0.9em;color:var(--text);margin-top:8px;line-height:1.7}
-
-/* Sub ratings */
-.sub-ratings{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sub-rate{
-padding:12px;background:var(--glass);border-radius:12px;border:1px solid var(--glass-border);
-}
-.sub-rate .cat{font-size:0.75em;color:var(--text-dim);margin-bottom:4px}
-.sub-rate .stars{font-size:1.1em;margin-bottom:4px}
-.sub-rate .txt{font-size:0.8em;color:var(--text);line-height:1.6}
-
-/* Ranking list */
-.ranking{margin-bottom:16px}
-.ranking h3{font-family:'kai',serif;font-size:1.1em;color:var(--gold);margin-bottom:10px;letter-spacing:3px}
-.rank-list{display:flex;flex-direction:column;gap:6px}
+/* Today rankings */
+.ranking-list{display:flex;flex-direction:column;gap:6px}
 .rank-item{
-display:flex;align-items:center;gap:8px;padding:8px 12px;
-background:var(--glass);border-radius:10px;border:1px solid var(--glass-border);
+display:flex;align-items:center;gap:10px;padding:10px 12px;
+background:rgba(255,255,255,0.02);border-radius:var(--radius-sm);
+border:1px solid transparent;transition:all 0.3s;cursor:pointer;
 }
-.rank-item .pos{
-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-font-size:0.75em;font-weight:bold;flex-shrink:0;
+.rank-item:hover{background:rgba(212,175,55,0.06);border-color:var(--border)}
+.rank-item.top1{background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.2)}
+.rank-item.top2{background:rgba(192,192,192,0.06);border-color:rgba(192,192,192,0.15)}
+.rank-item.top3{background:rgba(205,127,50,0.06);border-color:rgba(205,127,50,0.15)}
+.rank-num{
+width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+border-radius:50%;font-size:0.75em;font-weight:bold;flex-shrink:0;
+background:rgba(255,255,255,0.05);color:var(--text-dim);
 }
-.rank-item:nth-child(1) .pos{background:linear-gradient(135deg,#FFD700,#FFA500);color:#000}
-.rank-item:nth-child(2) .pos{background:linear-gradient(135deg,#C0C0C0,#A0A0A0);color:#000}
-.rank-item:nth-child(3) .pos{background:linear-gradient(135deg,#CD7F32,#A0522D);color:#fff}
-.rank-item .sign-name{flex:1;font-size:0.85em}
-.rank-item .rank-stars{font-size:0.85em;color:var(--gold-light)}
+.top1 .rank-num{background:linear-gradient(135deg,#FFD700,#FFA500);color:#1a1a2e;font-size:0.85em}
+.top2 .rank-num{background:linear-gradient(135deg,#C0C0C0,#A0A0A0);color:#1a1a2e}
+.top3 .rank-num{background:linear-gradient(135deg,#CD7F32,#B8860B);color:#1a1a2e}
+.rank-emoji{font-size:1.5em;flex-shrink:0}
+.rank-info{flex:1;min-width:0}
+.rank-name{font-size:0.92em;color:var(--text-bright);font-weight:bold}
+.rank-stars{color:var(--gold);font-size:0.8em;margin-left:6px}
+.rank-summary{font-size:0.78em;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-score{
+font-size:0.85em;font-weight:bold;color:var(--gold);flex-shrink:0;
+min-width:36px;text-align:right;
+}
 
-/* Paywall overlay */
-.paywall{
-position:relative;margin-top:16px;
+/* Zodiac grid */
+.zodiac-grid{
+display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0;
 }
-.paywall-content{filter:blur(6px);pointer-events:none;user-select:none;opacity:0.4}
+.zodiac-btn{
+display:flex;flex-direction:column;align-items:center;gap:2px;
+padding:14px 4px 10px;border-radius:var(--radius-sm);
+background:var(--glass);border:1.5px solid var(--glass-border);
+cursor:pointer;transition:all 0.35s ease;
+}
+.zodiac-btn:hover{
+background:rgba(212,175,55,0.08);border-color:var(--gold-dim);
+transform:translateY(-2px);
+}
+.zodiac-btn.active{
+background:rgba(212,175,55,0.12);border-color:var(--gold);
+box-shadow:0 0 20px rgba(212,175,55,0.15),inset 0 0 20px rgba(212,175,55,0.05);
+}
+.zodiac-btn .emoji{font-size:1.6em;filter:drop-shadow(0 0 4px rgba(255,255,255,0.1))}
+.zodiac-btn .name{font-size:0.82em;color:var(--text-dim);letter-spacing:2px;margin-top:2px}
+.zodiac-btn .dates{font-size:0.6em;color:var(--text-muted)}
+.zodiac-btn.active .name{color:var(--gold)}
+
+/* Sign profile card */
+.profile-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.profile-emoji{font-size:3.2em;filter:drop-shadow(0 0 12px rgba(212,175,55,0.3))}
+.profile-meta h2{font-family:'kai',serif;font-size:1.5em;color:var(--gold);letter-spacing:4px;font-weight:normal}
+.profile-meta .symbol{color:var(--text-dim);font-size:0.85em;margin-top:2px}
+
+.badge{
+display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75em;
+letter-spacing:1px;margin:2px 4px 2px 0;
+}
+.badge-fire{background:rgba(226,88,34,0.2);color:#ff7b4a;border:1px solid rgba(226,88,34,0.3)}
+.badge-earth{background:rgba(139,105,20,0.2);color:#c4a84a;border:1px solid rgba(139,105,20,0.3)}
+.badge-air{background:rgba(74,144,217,0.2);color:#6db3ff;border:1px solid rgba(74,144,217,0.3)}
+.badge-water{background:rgba(46,139,139,0.2);color:#4ac4c4;border:1px solid rgba(46,139,139,0.3)}
+
+.attr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.attr-item{
+padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:var(--radius-xs);
+border:1px solid rgba(255,255,255,0.04);
+}
+.attr-label{font-size:0.72em;color:var(--text-muted);letter-spacing:1px}
+.attr-value{font-size:0.88em;color:var(--text-bright);margin-top:1px}
+
+.trait-tags{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.trait-tag{
+padding:4px 12px;border-radius:20px;font-size:0.78em;
+background:rgba(212,175,55,0.08);border:1px solid var(--border);color:var(--gold-light);
+letter-spacing:1px;
+}
+
+/* Content sections */
+.content-block{margin:14px 0}
+.content-block h3{
+font-family:'kai',serif;font-size:1.05em;color:var(--gold);
+letter-spacing:3px;margin-bottom:8px;font-weight:normal;
+display:flex;align-items:center;gap:8px;
+}
+.content-block p{
+font-size:0.9em;line-height:2;color:var(--text);text-indent:2em;margin-bottom:8px;
+}
+.content-block p.no-indent{text-indent:0}
+
+/* Compatibility */
+.compat-item{
+display:flex;align-items:center;gap:10px;padding:10px;margin:6px 0;
+background:rgba(255,255,255,0.02);border-radius:var(--radius-xs);
+border:1px solid rgba(255,255,255,0.03);
+}
+.compat-icon{font-size:1.4em;flex-shrink:0}
+.compat-sign{font-size:0.9em;color:var(--gold-light);font-weight:bold;min-width:50px}
+.compat-reason{font-size:0.82em;color:var(--text-dim);flex:1}
+
+/* Paywall */
+.paywall-wrap{position:relative;overflow:hidden;border-radius:var(--radius)}
+.paywall-content{filter:blur(8px);pointer-events:none;user-select:none;-webkit-user-select:none}
 .paywall-overlay{
-position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-text-align:center;z-index:2;width:90%;
+position:absolute;top:0;left:0;right:0;bottom:0;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+background:rgba(8,8,16,0.5);z-index:2;padding:20px;text-align:center;
 }
-.paywall-overlay .lock-icon{font-size:2.5em;margin-bottom:8px}
-.paywall-overlay .lock-text{font-size:0.95em;color:var(--text);margin-bottom:12px;line-height:1.6}
-.unlock-btn{
-display:inline-block;padding:12px 32px;
+.paywall-icon{font-size:2.5em;margin-bottom:8px;filter:drop-shadow(0 0 12px rgba(212,175,55,0.4))}
+.paywall-text{color:var(--text);font-size:0.92em;letter-spacing:1px;margin-bottom:4px}
+.paywall-sub{color:var(--text-dim);font-size:0.78em;margin-bottom:14px}
+.paywall-btn{
+display:inline-block;padding:12px 32px;border-radius:30px;
 background:linear-gradient(135deg,var(--gold),var(--gold-dark));
-color:#000;font-weight:bold;font-size:0.95em;border:none;border-radius:25px;
-cursor:pointer;letter-spacing:2px;
+color:#1a1a2e;font-size:0.95em;font-weight:bold;letter-spacing:2px;
+cursor:pointer;border:none;transition:all 0.3s;
 box-shadow:0 4px 20px rgba(212,175,55,0.3);
-transition:all 0.3s;
 }
-.unlock-btn:hover{box-shadow:0 6px 30px rgba(212,175,55,0.5);transform:translateY(-2px)}
-.price-tag{font-size:0.75em;color:var(--text-dim);margin-top:6px}
+.paywall-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(212,175,55,0.4)}
+.paywall-hint{color:var(--text-muted);font-size:0.72em;margin-top:8px}
 
-/* Detail sections (paid) */
-.detail-section{margin-bottom:16px}
-.detail-section h3{
-font-family:'kai',serif;font-size:1em;color:var(--gold);margin-bottom:8px;
-padding-bottom:6px;border-bottom:1px solid var(--glass-border);letter-spacing:2px;
+/* Fortune tabs */
+.fortune-tabs{
+display:flex;gap:0;margin:16px 0 14px;border-radius:var(--radius-sm);overflow:hidden;
+border:1px solid var(--glass-border);
 }
-.detail-text{font-size:0.88em;color:var(--text);line-height:1.9}
+.fortune-tab{
+flex:1;padding:10px 4px;text-align:center;font-size:0.82em;
+background:var(--glass);color:var(--text-dim);cursor:pointer;
+border-right:1px solid var(--glass-border);transition:all 0.3s;
+letter-spacing:1px;position:relative;
+}
+.fortune-tab:last-child{border-right:none}
+.fortune-tab:hover{background:rgba(212,175,55,0.06);color:var(--text)}
+.fortune-tab.active{
+background:rgba(212,175,55,0.12);color:var(--gold);font-weight:bold;
+}
+.fortune-tab .lock{font-size:0.75em;vertical-align:super}
 
-/* Personality section */
-.personality{
-background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;
-padding:16px;margin-bottom:16px;
+/* Star display */
+.star-display{text-align:center;margin:14px 0}
+.star-display .big-stars{font-size:1.8em;color:var(--gold);letter-spacing:4px}
+.star-display .score-text{font-size:0.85em;color:var(--text-dim);margin-top:4px}
+
+/* Dimension cards */
+.dim-card{
+padding:14px;margin:10px 0;background:rgba(255,255,255,0.02);
+border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.04);
 }
-.personality h3{font-family:'kai',serif;font-size:1.05em;color:var(--gold);margin-bottom:8px;letter-spacing:2px}
-.personality p{font-size:0.85em;line-height:1.8;color:var(--text)}
-.traits{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.trait{
-font-size:0.75em;padding:4px 10px;border-radius:15px;
-background:rgba(107,76,154,0.12);border:1px solid rgba(107,76,154,0.25);color:var(--purple-light);
+.dim-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.dim-icon{font-size:1.3em}
+.dim-name{font-size:0.95em;color:var(--gold-light);font-weight:bold;letter-spacing:2px}
+.dim-stars{margin-left:auto;color:var(--gold);font-size:0.85em}
+.dim-text{font-size:0.88em;color:var(--text);line-height:1.9}
+.dim-tip{
+margin-top:8px;padding:8px 12px;background:rgba(212,175,55,0.06);
+border-left:2px solid var(--gold-dim);border-radius:0 var(--radius-xs) var(--radius-xs) 0;
+font-size:0.82em;color:var(--gold-light);
 }
+
+/* Power days */
+.day-item{
+display:flex;gap:10px;padding:10px;margin:6px 0;
+background:rgba(255,255,255,0.02);border-radius:var(--radius-xs);
+}
+.day-date{
+min-width:44px;text-align:center;font-size:0.82em;font-weight:bold;
+color:var(--gold);flex-shrink:0;
+}
+.day-desc{font-size:0.85em;color:var(--text);line-height:1.7}
+
+/* Moon phase */
+.moon-display{text-align:center;margin:12px 0}
+.moon-icon{font-size:3em;filter:drop-shadow(0 0 12px rgba(200,200,255,0.3))}
+.moon-name{font-size:1em;color:var(--gold-light);margin-top:4px;letter-spacing:3px}
 
 /* Footer */
-.footer{text-align:center;padding:24px 0;color:var(--text-dim);font-size:0.75em;letter-spacing:1px}
+.footer{text-align:center;padding:24px 0 32px;font-size:0.78em;color:var(--text-muted)}
 .footer a{color:var(--gold-dim);text-decoration:none}
+.footer a:hover{color:var(--gold)}
+.footer p{margin:4px 0;letter-spacing:1px}
 
-/* Compatibility mini */
-.compat{margin-top:12px}
-.compat h4{font-size:0.85em;color:var(--gold-dim);margin-bottom:6px}
-.compat-row{display:flex;gap:6px;flex-wrap:wrap}
-.compat-tag{
-font-size:0.75em;padding:3px 8px;border-radius:10px;
-background:rgba(212,175,55,0.08);border:1px solid var(--glass-border);color:var(--text-dim);
-}
-.compat-tag.good{background:rgba(0,168,107,0.1);border-color:rgba(0,168,107,0.25);color:#4CD9A0}
-.compat-tag.bad{background:rgba(200,50,50,0.1);border-color:rgba(200,50,50,0.25);color:#E87070}
+/* Animations */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(212,175,55,0.1)}50%{box-shadow:0 0 20px rgba(212,175,55,0.25)}}
+.anim-in{animation:fadeInUp 0.5s ease both}
+.anim-in-d1{animation-delay:0.1s}
+.anim-in-d2{animation-delay:0.2s}
+.anim-in-d3{animation-delay:0.3s}
 
 /* Responsive */
 @media(max-width:380px){
-.sign-grid{grid-template-columns:repeat(3,1fr)}
-.sign-btn .date{display:none}
-.sub-ratings{grid-template-columns:1fr}
+.zodiac-grid{gap:6px}
+.zodiac-btn{padding:10px 2px 8px}
+.zodiac-btn .emoji{font-size:1.3em}
+.attr-grid{grid-template-columns:1fr}
+}
+@media(min-width:600px){
+.container{padding:16px 24px}
+.zodiac-grid{gap:12px}
 }
 
-/* Animations */
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.fade-in{animation:fadeIn 0.4s ease-out}
+/* Hide scrollbar for clean look */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--gold)}
 
-/* Hide sections */
-.hidden{display:none!important}
+/* Section reveal */
+.sign-detail{display:none}
+.sign-detail.visible{display:block;animation:fadeIn 0.4s ease}
 </style>
 </head>
 <body>
-
-<!-- Stars background -->
-<div class="stars" id="starsContainer"></div>
-
+<canvas id="starCanvas"></canvas>
 <div class="container">
 
+<!-- Back Nav -->
+<nav class="back-nav">
+<a href="/" onclick="if(window.top!==window.self){window.top.location.href='/';return false;}">
+<span>&#8592;</span> 返回首页
+</a>
+</nav>
+
 <!-- Header -->
-<div class="header">
-  <span class="icon">✦</span>
-  <h1>星座运势</h1>
-  <div class="sub">每日星象 · 运势指引</div>
-</div>
-<div class="divider"></div>
+<header class="header">
+<span class="icon">&#10022;</span>
+<h1>星座运势</h1>
+<div class="sub">观星象 &middot; 知吉凶 &middot; 顺天时</div>
+</header>
 
 <!-- Date bar -->
 <div class="date-bar" id="dateBar"></div>
 
-<!-- Today's ranking (free) -->
-<div class="ranking" id="rankingSection">
-  <h3>✧ 今日运势排行 ✧</h3>
-  <div class="rank-list" id="rankList"></div>
+<div class="divider"></div>
+
+<!-- Today Rankings -->
+<div class="section-title">今日星座排行</div>
+<div class="glass-card anim-in" id="rankingCard">
+<div class="ranking-list" id="rankingList"></div>
 </div>
 
 <div class="divider"></div>
 
 <!-- Sign selector -->
-<div class="sign-grid" id="signGrid"></div>
+<div class="section-title">选择你的星座</div>
+<div class="zodiac-grid" id="zodiacGrid"></div>
 
-<!-- Sign info card -->
-<div class="sign-info" id="signInfo"></div>
+<div class="divider"></div>
 
-<!-- Time dimension tabs -->
-<div class="tab-bar" id="tabBar">
-  <div class="tab active" data-period="daily">今日</div>
-  <div class="tab" data-period="weekly">本周</div>
-  <div class="tab" data-period="monthly">本月</div>
-  <div class="tab" data-period="quarterly">本季<span class="lock">🔒</span></div>
-  <div class="tab" data-period="yearly">2026年<span class="lock">🔒</span></div>
-</div>
+<!-- Selected sign detail (hidden until selected) -->
+<div class="sign-detail" id="signDetail">
 
-<!-- Fortune content area -->
-<div id="fortuneArea"></div>
+<!-- Profile -->
+<div class="glass-card anim-in" id="profileCard"></div>
 
-<!-- Personality (free) -->
-<div class="personality hidden" id="personalitySection">
-  <h3>✧ 星座性格 ✧</h3>
-  <div id="personalityContent"></div>
-</div>
+<!-- Character deep dive -->
+<div class="glass-card anim-in anim-in-d1" id="characterCard"></div>
+
+<!-- Compatibility -->
+<div class="glass-card anim-in anim-in-d2" id="compatCard"></div>
+
+<!-- Soul mission (PAID) -->
+<div class="glass-card anim-in anim-in-d3" id="soulCard"></div>
+
+<div class="divider"></div>
+
+<!-- Fortune tabs -->
+<div class="fortune-tabs" id="fortuneTabs"></div>
+
+<!-- Fortune content -->
+<div class="glass-card anim-in" id="fortuneContent"></div>
+
+<!-- Four dimensions -->
+<div id="dimCards"></div>
+
+<!-- Power days / Caution days -->
+<div class="glass-card anim-in" id="daysCard" style="display:none"></div>
+
+<!-- Moon phase -->
+<div class="glass-card anim-in" id="moonCard"></div>
+
+</div><!-- /sign-detail -->
 
 <!-- Footer -->
-<div class="footer">
-  <div class="divider"></div>
-  星座运势 · <a href="/">返回首页</a><br>
-  仅供娱乐参考 · 命运掌握在自己手中
-</div>
+<footer class="footer">
+<div class="divider"></div>
+<p><a href="/" onclick="if(window.top!==window.self){window.top.location.href='/';return false;}">星座运势 &middot; 返回首页</a></p>
+<p>仅供娱乐参考 &middot; 命运掌握在自己手中</p>
+<p style="margin-top:8px">&copy; 2026 星象指引</p>
+</footer>
 
-</div>
+</div><!-- /container -->
 
 <script>
-// ========== ZODIAC DATA (from books) ==========
-const SIGNS = [
-  {id:'aries',name:'白羊座',symbol:'♈',emoji:'🐏',dates:'3.21-4.19',
-   element:'fire',elName:'火象',quality:'开创',ruler:'火星',rulerEn:'Mars',
-   keyword:'行动',phrase:'我是',
-   gem:'钻石',color:'红色',lucky:[1,9],day:'周二',
-   flower:'天竺葵',body:'头部',
-   traits:['勇敢果断','热情冲动','领导力强','直率坦诚','充满活力','竞争心强'],
-   goodMatch:['leo','sagittarius','gemini','aquarius'],
-   badMatch:['cancer','capricorn'],
-   desc:'白羊座是黄道第一宫，代表新生与开端。如春分时节万物萌发，白羊座的人天生具有开拓者的勇气与冲劲。火星赋予他们无穷的精力和战斗精神，使他们在面对挑战时从不退缩。他们思维敏捷，行动迅速，是天生的领袖。然而，急躁和缺乏耐心也是他们需要修炼的功课。'},
-  {id:'taurus',name:'金牛座',symbol:'♉',emoji:'🐂',dates:'4.20-5.20',
-   element:'earth',elName:'土象',quality:'固定',ruler:'金星',rulerEn:'Venus',
-   keyword:'稳定',phrase:'我拥有',
-   gem:'祖母绿',color:'绿色',lucky:[2,6],day:'周五',
-   flower:'紫罗兰',body:'喉颈',
-   traits:['踏实可靠','审美力强','意志坚定','忠诚专一','享受生活','固执己见'],
-   goodMatch:['virgo','capricorn','cancer','pisces'],
-   badMatch:['leo','aquarius'],
-   desc:'金牛座由金星守护，与美、爱和物质世界有着深厚的联结。他们是黄道中最可靠的星座之一，一旦下定决心便如磐石般坚定。金牛座的人拥有精致的品味，懂得享受生活中的美好事物。他们工作勤勉，善于积累财富，是天生的理财能手。但过度的固执和对变化的抗拒，有时会成为成长的阻碍。'},
-  {id:'gemini',name:'双子座',symbol:'♊',emoji:'👯',dates:'5.21-6.21',
-   element:'air',elName:'风象',quality:'变动',ruler:'水星',rulerEn:'Mercury',
-   keyword:'沟通',phrase:'我思考',
-   gem:'玛瑙',color:'黄色',lucky:[3,5],day:'周三',
-   flower:'薰衣草',body:'手臂/肩膀',
-   traits:['聪慧善变','口才出众','好奇心强','社交达人','思维活跃','缺乏专注'],
-   goodMatch:['libra','aquarius','aries','leo'],
-   badMatch:['virgo','pisces'],
-   desc:'双子座由水星守护，掌管沟通与思维。他们是黄道中最具智慧和社交魅力的星座。双子座的人对世界充满好奇，能够同时关注多个话题，在社交场合游刃有余。他们的适应能力极强，能够快速融入任何环境。然而，双子的二元性也让他们时常摇摆不定，需要学会在多变中找到内心的定锚。'},
-  {id:'cancer',name:'巨蟹座',symbol:'♋',emoji:'🦀',dates:'6.22-7.22',
-   element:'water',elName:'水象',quality:'开创',ruler:'月亮',rulerEn:'Moon',
-   keyword:'感受',phrase:'我感觉',
-   gem:'珍珠',color:'银白色',lucky:[2,7],day:'周一',
-   flower:'百合',body:'胸部/胃',
-   traits:['温柔体贴','直觉敏锐','重视家庭','情感丰富','保护欲强','敏感多疑'],
-   goodMatch:['scorpio','pisces','taurus','virgo'],
-   badMatch:['aries','libra'],
-   desc:'巨蟹座由月亮守护，是黄道中最重视情感和家庭的星座。他们拥有强大的直觉和深厚的共情能力，能够敏锐地感知他人的情绪变化。巨蟹座的人像螃蟹一样，外壳坚硬而内心柔软，用坚强的外表保护着自己和所爱之人。家是他们的避风港，亲密关系是他们生命的重心。'},
-  {id:'leo',name:'狮子座',symbol:'♌',emoji:'🦁',dates:'7.23-8.22',
-   element:'fire',elName:'火象',quality:'固定',ruler:'太阳',rulerEn:'Sun',
-   keyword:'创造',phrase:'我意志',
-   gem:'红宝石',color:'金色',lucky:[1,4],day:'周日',
-   flower:'向日葵',body:'心脏/背部',
-   traits:['慷慨大方','领导魄力','自信光芒','戏剧天赋','忠诚热情','爱面子'],
-   goodMatch:['aries','sagittarius','gemini','libra'],
-   badMatch:['taurus','scorpio'],
-   desc:'狮子座由太阳守护，是黄道中最耀眼的星座。他们天生具有王者的气质和光芒，走到哪里都是众人瞩目的焦点。狮子座慷慨大方，对朋友和爱人极为忠诚，会毫不犹豫地为所爱之人挺身而出。他们拥有强大的创造力和表演天赋，热爱生活中的一切美好。学会谦逊和倾听，是狮子座走向伟大的关键。'},
-  {id:'virgo',name:'处女座',symbol:'♍',emoji:'👼',dates:'8.23-9.22',
-   element:'earth',elName:'土象',quality:'变动',ruler:'水星',rulerEn:'Mercury',
-   keyword:'分析',phrase:'我分析',
-   gem:'蓝宝石',color:'深蓝/灰色',lucky:[5,3],day:'周三',
-   flower:'牵牛花',body:'消化系统',
-   traits:['细心严谨','追求完美','务实勤劳','善于分析','乐于助人','挑剔苛刻'],
-   goodMatch:['taurus','capricorn','cancer','scorpio'],
-   badMatch:['gemini','sagittarius'],
-   desc:'处女座同样由水星守护，但与双子座不同，他们将水星的智慧用于细节的分析和改进。处女座是黄道中最严谨、最有条理的星座，他们拥有敏锐的观察力和出色的问题解决能力。他们乐于助人，总是默默地为身边的人服务。追求完美是处女座的本能，但也需要学会接受不完美的美。'},
-  {id:'libra',name:'天秤座',symbol:'♎',emoji:'⚖️',dates:'9.23-10.23',
-   element:'air',elName:'风象',quality:'开创',ruler:'金星',rulerEn:'Venus',
-   keyword:'平衡',phrase:'我平衡',
-   gem:'蛋白石',color:'粉色/浅蓝',lucky:[6,9],day:'周五',
-   flower:'玫瑰',body:'肾脏/腰部',
-   traits:['优雅迷人','追求和谐','公正客观','审美卓越','善于社交','优柔寡断'],
-   goodMatch:['gemini','aquarius','leo','sagittarius'],
-   badMatch:['cancer','capricorn'],
-   desc:'天秤座由金星守护，是黄道中最追求平衡与和谐的星座。他们天生具有外交家的才能，能够在冲突中找到双方都能接受的解决方案。天秤座的审美眼光无与伦比，他们重视美、艺术和人际关系中的优雅。作为风象星座，他们聪慧善辩，社交魅力出众。但追求平衡有时也意味着难以做出决定。'},
-  {id:'scorpio',name:'天蝎座',symbol:'♏',emoji:'🦂',dates:'10.24-11.22',
-   element:'water',elName:'水象',quality:'固定',ruler:'冥王星',rulerEn:'Pluto',
-   keyword:'转化',phrase:'我渴望',
-   gem:'黄玉',color:'深红/黑色',lucky:[8,4],day:'周二',
-   flower:'菊花',body:'生殖系统',
-   traits:['洞察力强','意志坚韧','神秘魅力','忠诚专情','策略大师','嫉妒偏执'],
-   goodMatch:['cancer','pisces','virgo','capricorn'],
-   badMatch:['leo','aquarius'],
-   desc:'天蝎座由冥王星守护，代表着死亡与重生的循环。他们是黄道中最深沉、最有洞察力的星座。天蝎座的人像他们的守护星一样，拥有令人敬畏的转化力量——能够从最黑暗的处境中浴火重生。他们的感情深沉而强烈，一旦投入便全力以赴。天蝎座的直觉和洞察力几乎是超自然的，没有什么能逃过他们的眼睛。'},
-  {id:'sagittarius',name:'射手座',symbol:'♐',emoji:'🏹',dates:'11.23-12.21',
-   element:'fire',elName:'火象',quality:'变动',ruler:'木星',rulerEn:'Jupiter',
-   keyword:'探索',phrase:'我看见',
-   gem:'绿松石',color:'紫色',lucky:[3,9],day:'周四',
-   flower:'蒲公英',body:'臀部/大腿',
-   traits:['乐观开朗','热爱自由','哲学思维','直言不讳','冒险精神','粗心大意'],
-   goodMatch:['aries','leo','libra','aquarius'],
-   badMatch:['virgo','pisces'],
-   desc:'射手座由木星守护，是黄道中最乐观、最热爱自由的星座。他们是天生的探险家和哲学家，永远渴望看到更远的地平线。木星赋予射手座扩张和好运的能量，使他们总是充满信心地迎接新的挑战。他们的坦率和幽默感极具感染力，身边的人总是被他们的正能量所吸引。'},
-  {id:'capricorn',name:'摩羯座',symbol:'♑',emoji:'🐐',dates:'12.22-1.19',
-   element:'earth',elName:'土象',quality:'开创',ruler:'土星',rulerEn:'Saturn',
-   keyword:'成就',phrase:'我利用',
-   gem:'石榴石',color:'深棕/黑色',lucky:[4,8],day:'周六',
-   flower:'三色堇',body:'膝盖/骨骼',
-   traits:['雄心壮志','自律严格','责任感强','务实稳重','耐心持久','过于严肃'],
-   goodMatch:['taurus','virgo','scorpio','pisces'],
-   badMatch:['aries','libra'],
-   desc:'摩羯座由土星守护，是黄道中最有野心和自律精神的星座。他们像攀登高峰的山羊一样，虽然步伐缓慢但从不停歇，终将登上顶峰。摩羯座天生具有领导者的素质和企业家的头脑，他们深知成功来之不易，因此比任何人都更愿意付出努力。土星教会他们延迟满足的智慧，使他们能够为长远目标坚持不懈。'},
-  {id:'aquarius',name:'水瓶座',symbol:'♒',emoji:'🏺',dates:'1.20-2.18',
-   element:'air',elName:'风象',quality:'固定',ruler:'天王星',rulerEn:'Uranus',
-   keyword:'革新',phrase:'我知道',
-   gem:'紫水晶',color:'电蓝色',lucky:[7,4],day:'周六',
-   flower:'兰花',body:'小腿/脚踝',
-   traits:['独立特行','人道主义','创新思维','友善博爱','叛逆不羁','情感疏离'],
-   goodMatch:['gemini','libra','aries','sagittarius'],
-   badMatch:['taurus','scorpio'],
-   desc:'水瓶座由天王星守护，是黄道中最具革新精神和前瞻性的星座。他们是天生的改革者和梦想家，总是站在时代的前沿思考未来。水瓶座重视自由和独立，不愿被传统和规则所束缚。他们拥有强烈的人道主义精神，关心人类的共同命运。虽然他们在情感表达上可能显得疏离，但内心深处对友谊和理想有着炽热的追求。'},
-  {id:'pisces',name:'双鱼座',symbol:'♓',emoji:'🐟',dates:'2.19-3.20',
-   element:'water',elName:'水象',quality:'变动',ruler:'海王星',rulerEn:'Neptune',
-   keyword:'超越',phrase:'我相信',
-   gem:'海蓝宝石',color:'海蓝色',lucky:[3,7],day:'周四',
-   flower:'睡莲',body:'足部',
-   traits:['共情天赋','艺术灵感','直觉超群','善良慈悲','浪漫梦幻','逃避现实'],
-   goodMatch:['cancer','scorpio','taurus','capricorn'],
-   badMatch:['gemini','sagittarius'],
-   desc:'双鱼座由海王星守护，是黄道的最后一个星座，象征着灵魂的归宿和超越。他们是最富有同理心和灵性的星座，能够感受到肉眼看不见的微妙能量。双鱼座天生具有艺术家的气质和治愈者的天赋，他们的想象力丰富到足以创造出整个世界。海王星赋予他们梦幻般的浪漫气质，但也需要警惕迷失在幻想中。'}
+// ============================================================
+// STAR CANVAS ANIMATION
+// ============================================================
+(function(){
+const c=document.getElementById('starCanvas'),ctx=c.getContext('2d');
+let stars=[];const NUM=120;
+function resize(){c.width=window.innerWidth;c.height=window.innerHeight;initStars()}
+function initStars(){
+stars=[];for(let i=0;i<NUM;i++){
+stars.push({x:Math.random()*c.width,y:Math.random()*c.height,
+r:Math.random()*1.5+0.3,a:Math.random(),da:(Math.random()-0.5)*0.008,
+dx:(Math.random()-0.5)*0.15,dy:(Math.random()-0.5)*0.1});
+}}
+function draw(){
+ctx.clearRect(0,0,c.width,c.height);
+for(let s of stars){
+s.a+=s.da;if(s.a>1||s.a<0.1)s.da*=-1;
+s.x+=s.dx;s.y+=s.dy;
+if(s.x<0)s.x=c.width;if(s.x>c.width)s.x=0;
+if(s.y<0)s.y=c.height;if(s.y>c.height)s.y=0;
+ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+ctx.fillStyle=`rgba(255,255,240,${s.a*0.7})`;ctx.fill();
+}
+// Occasional shooting star
+if(Math.random()<0.002){
+const sx=Math.random()*c.width,sy=Math.random()*c.height*0.5;
+const len=60+Math.random()*80;
+const grad=ctx.createLinearGradient(sx,sy,sx+len,sy+len*0.4);
+grad.addColorStop(0,'rgba(255,255,220,0.8)');grad.addColorStop(1,'rgba(255,255,220,0)');
+ctx.strokeStyle=grad;ctx.lineWidth=1.2;
+ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+len,sy+len*0.4);ctx.stroke();
+}
+requestAnimationFrame(draw);
+}
+window.addEventListener('resize',resize);resize();draw();
+})();
+
+// ============================================================
+// SEEDED PRNG (mulberry32)
+// ============================================================
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t^=t+Math.imul(t^t>>>7,61|t);return((t^t>>>14)>>>0)/4294967296}}
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return h}
+function seededRng(date,signId,extra){
+const s=date+'_'+signId+'_'+(extra||'');return mulberry32(hashStr(s));
+}
+
+// ============================================================
+// DATE UTILITIES
+// ============================================================
+const NOW=new Date();
+const Y=NOW.getFullYear(),M=NOW.getMonth()+1,D=NOW.getDate();
+const DOW=['日','一','二','三','四','五','六'][NOW.getDay()];
+const dateKey=`${Y}-${String(M).padStart(2,'0')}-${String(D).padStart(2,'0')}`;
+
+// Simple lunar calendar approximation
+function getLunarRef(){
+const lunarMonths=['正','二','三','四','五','六','七','八','九','十','冬','腊'];
+const lunarDays=['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+'十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+'廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+// approximate
+const rng=mulberry32(Y*10000+M*100+D);
+const lm=Math.floor(rng()*12);const ld=Math.floor(rng()*30);
+return lunarMonths[lm]+'月'+lunarDays[ld];
+}
+document.getElementById('dateBar').innerHTML=
+`${Y}年${M}月${D}日 星期${DOW}<span class="lunar">${getLunarRef()}</span>`;
+
+// ============================================================
+// MOON PHASE CALCULATOR
+// ============================================================
+function getMoonPhase(date){
+const d=date||new Date();
+const year=d.getFullYear(),month=d.getMonth()+1,day=d.getDate();
+// Conways algorithm approximation
+let r=year%100;let rr=r%19;
+if(rr>9)rr-=19;
+r=((rr*11)%30+month+day);
+if(month<3)r+=2;
+r-=((year<2000)?4:8.3);
+r=Math.floor(r+0.5)%30;
+if(r<0)r+=30;
+return r;
+}
+function getMoonInfo(){
+const phase=getMoonPhase(NOW);
+const phases=[
+{name:'新月',emoji:'🌑',range:[0,1]},
+{name:'蛾眉月',emoji:'🌒',range:[2,6]},
+{name:'上弦月',emoji:'🌓',range:[7,8]},
+{name:'盈凸月',emoji:'🌔',range:[9,13]},
+{name:'满月',emoji:'🌕',range:[14,16]},
+{name:'亏凸月',emoji:'🌖',range:[17,21]},
+{name:'下弦月',emoji:'🌗',range:[22,23]},
+{name:'残月',emoji:'🌘',range:[24,29]},
+];
+for(let p of phases){if(phase>=p.range[0]&&phase<=p.range[1])return p}
+return phases[0];
+}
+
+// ============================================================
+// ZODIAC SIGN DATA (12 signs, comprehensive)
+// ============================================================
+const SIGNS=[
+{
+id:'aries',name:'白羊座',symbol:'♈',emoji:'♈',dates:'3.21-4.19',
+element:'fire',elName:'火象',quality:'开创',ruler:'火星',rulerEn:'Mars',
+rulerDesc:'赋予行动力、勇气与战斗精神',
+keyword:'开拓',phrase:'我是 (I Am)',
+gem:'钻石',color:'红色',luckyNums:[1,9,17],luckyDay:'星期二',flower:'雏菊',metal:'铁',bodyPart:'头部',
+traits:['勇敢无畏','热情直接','行动力强','天生领袖','坦率真诚','竞争意识强','冒险精神','急性子','独立自主','充满活力'],
+strengths:'白羊座是黄道十二宫的第一个星座，象征着春分时节万物的新生与萌发。如同破土而出的嫩芽，白羊座的人天生携带着开拓者的勇气和先锋的精神。火星作为守护星，赋予了他们取之不竭的能量和无畏的战斗精神。在社交场合中，你很容易辨认出白羊座。他们是那个说话声音最响亮、握手最有力、笑容最直接的人。他们的眼神总是充满自信和坚定，仿佛世界上没有什么困难是他们无法征服的。白羊座的人有着与生俱来的正义感，看到不公之事会第一个站出来发声，这种率真和勇气往往让他们成为人群中最受信赖的伙伴。\n\n他们的热情具有感染力，能够点燃身边每一个人的斗志。当团队士气低落时，白羊座总能用自己的乐观和果敢带领大家重新出发。他们不善于掩饰情绪，喜怒哀乐都写在脸上，这种透明的性格让人觉得和他们相处毫无压力。然而，白羊座的耐心是他们最需要修炼的课题，学会在冲锋之前稍作停顿，将使他们的力量变得更加持久和深沉。',
+loveStyle:'在爱情中，白羊座是最热烈的追求者。一旦爱上，他们会毫不犹豫地表白，用最直接的方式表达自己的感情。他们渴望童话般的浪漫，相信一见钟情，也相信爱情可以战胜一切。白羊座在恋爱初期就像一团燃烧的火焰，炙热而明亮，恨不得把所有的温暖都给对方。\n\n但白羊座也需要学会：真正持久的爱情不仅需要火焰般的激情，还需要溪水般的耐心和细水长流的呵护。他们在感情中最大的课题是学会倾听，不要总是急于给出答案或解决方案，有时候伴侣需要的只是一个安静的倾听者。当白羊座学会在爱情中放慢脚步，他们会发现一个更加深邃和温柔的自己。',
+careerMoney:'事业上，白羊座是天生的领导者和创业者。他们有着超凡的决断力和行动力，能够在混乱中迅速做出决定并付诸行动。他们最适合需要主动性和冒险精神的职业，如企业家、运动员、军人或急救人员。白羊座的人讨厌循规蹈矩的工作，需要不断面对新的挑战来保持热情。\n\n在金钱观方面，白羊座属于赚得快花得也快的类型。他们有着强大的赚钱能力，但冲动消费也是常态。土星提醒白羊座：最伟大的将军不仅懂得冲锋，更懂得何时该耐心等待。学会理财和延迟满足，将让他们在物质世界走得更远。',
+growthChallenge:'白羊座最大的成长课题在于学会耐心和共情。他们天生以自我为中心，不是因为自私，而是因为作为黄道第一宫，他们的意识核心就是"我"。学会从"我想要"转变为"我们需要"，是白羊座灵魂进化的关键一步。此外，控制冲动、学会在行动前三思，以及接受并非所有事情都需要立即解决的事实，都是他们需要不断修炼的功课。',
+soulMission:{
+develop:['耐心与坚持','倾听他人的需求','团队合作意识','情绪管理能力','战略思维','延迟满足'],
+leaveBehind:['冲动行事','以自我为中心','急于求成','无视他人感受','半途而废','争强好胜'],
+achillesHeel:'过度自信导致忽视风险，冲动之下做出无法挽回的决定。白羊座需要铭记：真正的勇者不是不怕任何事，而是在恐惧面前依然选择前行，但会先确认方向是否正确。'
+},
+goodMatch:[
+{sign:'狮子座',reason:'两个火象星座碰撞出最耀眼的火花，相互欣赏对方的自信和热情'},
+{sign:'射手座',reason:'志同道合的冒险伙伴，永远有聊不完的话题和探索不完的世界'},
+{sign:'双子座',reason:'智慧和活力的完美结合，彼此都不会觉得无聊'},
+{sign:'水瓶座',reason:'独立个性相互尊重，给予彼此充分的自由空间'}
+],
+challengeMatch:[
+{sign:'巨蟹座',reason:'一个向外冲锋，一个向内守护，需要极大的理解和包容'},
+{sign:'摩羯座',reason:'行动派vs规划派，节奏差异明显，但互补中有成长'},
+{sign:'天秤座',reason:'直接vs委婉，决策方式截然不同，需要学会妥协'}
+]
+},
+{
+id:'taurus',name:'金牛座',symbol:'♉',emoji:'♉',dates:'4.20-5.20',
+element:'earth',elName:'土象',quality:'固定',ruler:'金星',rulerEn:'Venus',
+rulerDesc:'赋予美学鉴赏力、物质追求与感官享受',
+keyword:'拥有',phrase:'我有 (I Have)',
+gem:'祖母绿',color:'绿色',luckyNums:[2,6,15],luckyDay:'星期五',flower:'玫瑰',metal:'铜',bodyPart:'颈部/喉咙',
+traits:['坚韧不拔','务实稳重','审美独到','忠诚可靠','享受生活','固执己见','耐心十足','物质主义','温和体贴','天生财商'],
+strengths:'金牛座是黄道十二宫中最坚韧的星座，如同大地般沉稳而富饶。金星的守护赋予了他们对美的极致追求和对生活品质的高标准。金牛座的人有一种独特的魅力：他们不需要华丽的辞藻或夸张的行为来吸引注意力，仅仅是那种从容不迫的气质就足以让人安心。他们是那种你可以在暴风雨中依靠的人，稳如磐石，不动如山。\n\n金牛座对感官体验有着天生的敏锐度，一道精美的料理、一首动人的音乐、一块柔软的面料，都能给他们带来深层的愉悦。他们不是肤浅的享乐主义者，而是真正懂得品味生活的人。在物质世界中，金牛座展现出惊人的理财天赋，他们知道如何让金钱为自己工作，也深知积累的力量胜过一切投机。',
+loveStyle:'在爱情中，金牛座是最忠诚、最有安全感的伴侣。他们不会轻易开始一段感情，但一旦认定了，就会全心全意地投入。金牛座的爱像陈年老酒，越久越醇。他们用行动而非语言来证明自己的爱，一顿精心准备的晚餐、一个温暖的拥抱、一份生日时刚好你提过的礼物。\n\n但金牛座的占有欲和嫉妒心是感情中的隐患。他们需要学会信任伴侣，给予适度的自由。当金牛座感到不安时，他们会变得沉默和封闭，这时候伴侣需要耐心等待，而不是强迫他们敞开。金牛座需要明白：真正的拥有不是控制，而是让对方心甘情愿地选择留下。',
+careerMoney:'金牛座在事业上展现出非凡的耐力和毅力。他们不追求一夜成名，而是相信脚踏实地、持续努力的力量。金融、艺术、美食、建筑、农业等领域都是金牛座大展身手的舞台。他们天生就懂得如何将美学和商业完美结合。\n\n在金钱方面，金牛座可能是十二星座中最有理财头脑的。他们既不会过度挥霍，也不会一毛不拔，而是在品质和性价比之间找到完美平衡。金牛座的人适合长期投资，他们的耐心和判断力使他们能够在市场波动中保持冷静，等待最佳时机。',
+growthChallenge:'金牛座最大的成长课题是学会接受变化。作为固定星座，他们对稳定和确定性有着近乎执着的追求，而生活本身就是一场持续的变化。当金牛座过度抗拒改变时，他们会变得固执、保守甚至停滞不前。学会松手，接受生命的流动性，是金牛座从舒适区走向更广阔世界的关键。',
+soulMission:{
+develop:['灵活应变能力','精神层面的富足','放手与分享的能力','拥抱不确定性','内在安全感'],
+leaveBehind:['过度执着物质','固执不变通','占有欲过强','害怕改变','安于现状不求进取'],
+achillesHeel:'对物质安全感的过度依赖可能让金牛座错过生命中最珍贵的非物质体验。当他们把全部精力都放在积累和保护已有的东西上时，可能会忘记：有些最美好的事物，恰恰需要放手才能得到。'
+},
+goodMatch:[
+{sign:'处女座',reason:'两个土象星座心有灵犀，在务实中找到浪漫'},
+{sign:'摩羯座',reason:'价值观高度一致，共同建设稳固而富足的未来'},
+{sign:'巨蟹座',reason:'同样重视家庭和安全感，温柔地相互滋养'},
+{sign:'双鱼座',reason:'梦幻与现实的完美结合，浪漫而有根基'}
+],
+challengeMatch:[
+{sign:'水瓶座',reason:'传统vs创新，金牛追求稳定而水瓶渴望自由'},
+{sign:'狮子座',reason:'两个固定星座都不轻易让步，需要学会妥协'},
+{sign:'天蝎座',reason:'同为固定星座的对宫，吸引力强但摩擦也大'}
+]
+},
+{
+id:'gemini',name:'双子座',symbol:'♊',emoji:'♊',dates:'5.21-6.21',
+element:'air',elName:'风象',quality:'变动',ruler:'水星',rulerEn:'Mercury',
+rulerDesc:'赋予沟通天赋、思维敏捷与求知欲',
+keyword:'沟通',phrase:'我想 (I Think)',
+gem:'玛瑙',color:'黄色',luckyNums:[3,5,12],luckyDay:'星期三',flower:'薰衣草',metal:'水银',bodyPart:'手臂/肺部',
+traits:['思维敏捷','口才出众','好奇心旺盛','多才多艺','善于社交','善变多面','幽默风趣','适应力强','信息灵通','灵活机变'],
+strengths:'双子座是黄道带上最灵动的星座，如同春夏之交的轻风，自由而充满变化。水星的守护赋予了他们超凡的沟通天赋和永不满足的好奇心。双子座的大脑就像一台高速运转的处理器，同时处理着多条信息流，并且能在瞬间在不同话题之间自如切换。他们是天生的信息搬运工和翻译官，能够将复杂的概念用最生动有趣的方式表达出来。\n\n双子座的人拥有与生俱来的幽默感和社交魅力。他们走到哪里都能迅速打开局面，和任何人聊上几句。这不是肤浅的社交技巧，而是他们对世界和人性真诚的好奇。每一个遇到的人、每一个新的领域，对双子座来说都是一扇等待打开的门。但这种广泛的兴趣有时也意味着他们很难在一件事上深耕，学会专注是双子座变得更加强大的关键。',
+loveStyle:'双子座在爱情中需要的是一个能够跟上他们思维速度的伙伴。他们渴望智识上的共鸣，甚至超过肉体上的吸引。一个能让双子座觉得"和你聊天永远不会无聊"的人，就已经赢得了他们一半的心。双子座在恋爱中是充满惊喜的伴侣，他们总能想出新奇的约会方式，说出让人心跳加速的话。\n\n但双子座也被误解为花心，事实上他们只是害怕被束缚和无聊。当双子座真正找到那个能够同时满足他们对自由和深度需求的人时，他们会展现出意想不到的忠诚和深情。在感情中，双子座需要学会的是：真正的亲密需要勇气去展示自己脆弱的一面，而不是总用幽默和机智来回避内心深处的情感。',
+careerMoney:'双子座在需要沟通、写作、教学和信息处理的领域如鱼得水。记者、作家、主持人、营销策划、翻译、教师，都是他们的天赋所在。他们最忌讳单调重复的工作，需要不断变化的环境来保持热情。在数字时代，双子座的适应能力使他们在科技和媒体行业特别出色。\n\n金钱方面，双子座的态度比较随性。他们不是特别在意物质积累，更注重体验和知识的获取。这种态度让他们很少为金钱焦虑，但也可能导致缺乏长期财务规划。找一个靠谱的理财顾问或者培养储蓄习惯，会让双子座的财务状况更加稳健。',
+growthChallenge:'双子座最核心的成长课题是学会深度。他们天生是广度型人才，涉猎广泛却可能浮于表面。当双子座学会在一两个领域真正扎根深耕时，他们的博学和敏锐将发挥出真正的威力。此外，学会安静地独处、倾听内心的声音，而非总是向外寻求刺激，是双子座走向成熟的重要一步。',
+soulMission:{
+develop:['深度专注力','情感表达的真诚','一以贯之的坚持','内在的安宁','倾听的艺术'],
+leaveBehind:['浮于表面的社交','用幽默逃避真实情感','三分钟热度','言多必失','对深度承诺的恐惧'],
+achillesHeel:'过度依赖理性和语言来处理一切，可能让双子座与自己的深层情感失联。当他们意识到不是所有东西都能被语言表达、不是所有问题都能用头脑解决时，心灵的另一扇门就打开了。'
+},
+goodMatch:[
+{sign:'天秤座',reason:'两个风象星座的完美对话，永远有说不完的话题'},
+{sign:'水瓶座',reason:'智慧碰撞的火花，相互激发无限创意'},
+{sign:'白羊座',reason:'活力四射的组合，一起冒险永远不会沉闷'},
+{sign:'狮子座',reason:'双子的机智配上狮子的热情，是社交圈里最闪亮的组合'}
+],
+challengeMatch:[
+{sign:'处女座',reason:'同为水星守护但表达方式截然不同，需要耐心磨合'},
+{sign:'双鱼座',reason:'理性vs感性的对宫碰撞，需要学会对方的语言'},
+{sign:'天蝎座',reason:'深度vs广度的矛盾，但若能融合将非常强大'}
+]
+},
+{
+id:'cancer',name:'巨蟹座',symbol:'♋',emoji:'♋',dates:'6.22-7.22',
+element:'water',elName:'水象',quality:'开创',ruler:'月亮',rulerEn:'Moon',
+rulerDesc:'赋予敏锐直觉、深厚情感与母性光辉',
+keyword:'感受',phrase:'我感觉 (I Feel)',
+gem:'珍珠',color:'银白色',luckyNums:[2,7,11],luckyDay:'星期一',flower:'百合',metal:'银',bodyPart:'胸部/胃部',
+traits:['深情细腻','家庭至上','直觉敏锐','记忆力强','善于照顾','情绪多变','想象丰富','忠诚守护','敏感多情','有安全感需求'],
+strengths:'巨蟹座是十二星座中最具母性光辉的星座，月亮的守护赋予了他们如水般流动而深沉的情感。巨蟹座的人拥有一种独特的能力：他们能在人群中敏锐地察觉到每个人的情绪状态，像一面镜子般映照出他人内心的需求。这种与生俱来的共情力，使他们成为最温暖的倾听者和最体贴的照料者。\n\n就像他们的象征螃蟹一样，巨蟹座用坚硬的外壳保护着柔软的内心。不了解他们的人可能觉得巨蟹座有些疏离或防备，但一旦被他们接纳为"家人"，你就会体验到世界上最无微不至的关怀。巨蟹座对"家"有着近乎神圣的信仰，无论是一个温暖的居所、一桌丰盛的晚餐，还是一个让人可以卸下所有防备的安全港湾，都是他们用全部心血去营造的。',
+loveStyle:'巨蟹座在爱情中是最深情、最有奉献精神的伴侣。他们爱一个人就像潮水涌向海岸，全然而彻底。巨蟹座的爱不是轰轰烈烈的，而是润物细无声的。他们会记住你喜欢的每一种食物、你无意间提到的每一个愿望，然后在某个不经意的时刻给你惊喜。\n\n然而，巨蟹座在感情中最大的挑战是过度付出和情绪化。他们有时候会因为过于敏感而误读伴侣的言行，把一个无心之举放大成天大的伤害。巨蟹座需要学会：爱不是牺牲，健康的感情需要两个独立完整的人相互给予，而不是一方的无限妥协和委曲求全。',
+careerMoney:'巨蟹座在需要照料和情感连接的职业中表现出色。教育、医疗、心理咨询、餐饮、房地产、文化遗产保护等都是他们的优势领域。巨蟹座的直觉和情感洞察力在商业谈判中也是一种隐形武器，他们能准确判断对方的真实意图。\n\n在金钱方面，巨蟹座是天然的储蓄者。他们对经济安全的重视使他们很早就开始理财规划，善于为家庭积累财富。但有时候他们也会因为情感因素而做出不够理性的消费决定，比如为了取悦家人而过度消费。',
+growthChallenge:'巨蟹座的核心成长课题是建立内在的安全感，而不是完全依赖外在的环境和关系。当他们学会自我安抚、自我滋养，不再需要他人的持续认可来确认自己的价值时，他们的强大将令人惊叹。此外，学会适度放手，让孩子、伴侣和朋友有独立成长的空间，也是巨蟹座必修的功课。',
+soulMission:{
+develop:['内在安全感','健康的边界意识','独立与自我关怀','理性思考能力','放手的智慧','情绪调节力'],
+leaveBehind:['过度依赖他人','情绪化决策','控制欲','沉溺于过去','自我牺牲式付出','过度敏感'],
+achillesHeel:'将全部的安全感建立在他人和外部环境之上，一旦这些支撑消失，就会陷入深深的不安和恐惧。巨蟹座需要铭记：你内在的温暖和力量，才是永远不会消失的家。'
+},
+goodMatch:[
+{sign:'天蝎座',reason:'两个水象星座的深度灵魂联结，理解彼此无需言语'},
+{sign:'双鱼座',reason:'心灵默契无与伦比，共同编织浪漫的梦'},
+{sign:'金牛座',reason:'安全感满满的组合，一起建设温馨的家'},
+{sign:'处女座',reason:'细心呵护彼此，在日常琐碎中找到真爱'}
+],
+challengeMatch:[
+{sign:'白羊座',reason:'一个需要安全感，一个渴望自由，节奏差异大'},
+{sign:'天秤座',reason:'居家vs社交的矛盾，需要找到平衡点'},
+{sign:'水瓶座',reason:'情感表达方式截然不同，需要极大的耐心'}
+]
+},
+{
+id:'leo',name:'狮子座',symbol:'♌',emoji:'♌',dates:'7.23-8.22',
+element:'fire',elName:'火象',quality:'固定',ruler:'太阳',rulerEn:'Sun',
+rulerDesc:'赋予王者气概、创造力与自信光芒',
+keyword:'创造',phrase:'我愿 (I Will)',
+gem:'红宝石',color:'金色/橙色',luckyNums:[1,5,19],luckyDay:'星期日',flower:'向日葵',metal:'金',bodyPart:'心脏/脊椎',
+traits:['王者风范','自信大方','慷慨豪爽','创造力强','热情洋溢','领导天赋','戏剧性强','忠诚护短','追求卓越','光芒四射'],
+strengths:'狮子座是黄道带上最耀眼的存在，如同正午的太阳，无法被忽视。作为唯一由太阳守护的星座，狮子座天生就带着一种王者的气场和贵族的风度。他们走进一个房间，不需要刻意引起注意，自然而然就会成为焦点。这不仅仅是因为他们外在的自信和光芒，更是因为他们内在那股对生命的热爱和对卓越的追求。\n\n狮子座的慷慨是发自内心的。他们不是那种精打细算的人，而是真正享受给予的快乐。无论是请朋友吃饭、送出精心挑选的礼物，还是在他人需要帮助时伸出援手，狮子座都做得自然而优雅。他们有一种让身边的人也变得自信和快乐的魔力，就像太阳照耀大地，让万物生长。',
+loveStyle:'狮子座在爱情中是浪漫的骑士和热烈的情人。他们相信爱情是生命中最壮丽的冒险，值得用最盛大的方式去表达。狮子座的求爱过程充满仪式感，大型浪漫惊喜、公开示爱、不遗余力的追求，都是他们的拿手好戏。被狮子座爱上的人，会感受到被全世界最耀眼的光芒包围的幸福。\n\n但狮子座在爱情中也有自己的骄傲和脆弱。他们需要被崇拜、被欣赏、被重视。如果感到被忽视或不被尊重，狮子座受伤的自尊心会让他们变得冷漠甚至暴躁。最好的爱情对狮子座来说，是两个人互相照亮，而不是一方一直在聚光灯下，另一方永远在阴影中。',
+careerMoney:'狮子座在需要展示个人魅力和领导力的领域中大放异彩。演艺、管理、创业、政治、时尚等都是他们的理想舞台。狮子座天生就知道如何激励团队、如何在公众面前展现自己的最佳状态。他们追求的不仅是成功，更是卓越和被认可。\n\n在金钱观方面，狮子座相信自己值得最好的。他们的消费观念偏向品质和面子，有时候会超出预算来维持某种生活水准。但狮子座也有强大的赚钱能力，他们的自信和魅力往往能为他们打开许多财富之门。',
+growthChallenge:'狮子座最核心的成长课题是学会真正的谦逊。不是虚假的低调，而是发自内心地认识到：每个人都有自己的光芒，你不需要成为唯一的太阳。当狮子座学会欣赏他人的优秀，而不是将其视为对自己地位的威胁时，他们才真正配得上"王者"的称号。',
+soulMission:{
+develop:['真诚的谦逊','共享舞台的胸怀','内在自信vs外在认可','创造性服务他人','接受脆弱'],
+leaveBehind:['过度需要赞美','骄傲自大','控制欲','以自我为中心','戏剧化反应'],
+achillesHeel:'把自我价值完全建立在他人的赞美和认可之上。当掌声消失时，狮子座可能会陷入深深的自我怀疑。真正的王者力量，来自于即使在无人喝彩时也能坚定地做自己。'
+},
+goodMatch:[
+{sign:'白羊座',reason:'两团火焰相遇，互相点燃，能量无限'},
+{sign:'射手座',reason:'共同的热情和乐观主义，最快乐的情侣组合'},
+{sign:'天秤座',reason:'审美和社交高度匹配，是最光鲜亮丽的一对'},
+{sign:'双子座',reason:'风助火势，双子的机智让狮子永远不会无聊'}
+],
+challengeMatch:[
+{sign:'金牛座',reason:'两个固定星座的倔强碰撞，都不愿先低头'},
+{sign:'天蝎座',reason:'权力斗争和控制欲的角力，火花四溅'},
+{sign:'水瓶座',reason:'对宫星座的互相吸引又互相抗拒，需要极大智慧'}
+]
+},
+{
+id:'virgo',name:'处女座',symbol:'♍',emoji:'♍',dates:'8.23-9.22',
+element:'earth',elName:'土象',quality:'变动',ruler:'水星',rulerEn:'Mercury',
+rulerDesc:'赋予分析能力、完美主义与服务精神',
+keyword:'完善',phrase:'我分析 (I Analyze)',
+gem:'蓝宝石',color:'深蓝/米色',luckyNums:[4,6,14],luckyDay:'星期三',flower:'铃兰',metal:'铂金',bodyPart:'消化系统',
+traits:['精益求精','善于分析','勤劳务实','谦逊低调','乐于助人','注重细节','追求完美','自律严格','博学多识','可靠负责'],
+strengths:'处女座是黄道带上最精密的工匠，水星赋予他们的不是双子座式的广博，而是深入骨髓的分析力和对完美的不懈追求。处女座的人有着鹰一般的眼睛，能够在一片混乱中准确找到问题的核心，然后用最高效的方式去解决它。他们是那种你交给他们一个项目，就可以完全放心的人，因为他们比你更在意每一个细节。\n\n在处女座谦逊低调的外表下，隐藏着一颗真正想要让世界变得更好的心。他们的服务精神不是出于讨好或软弱，而是一种深刻的使命感。处女座相信，通过不断地改善和完善自己及周围的环境，世界可以变得更加有序和美好。他们是最不会邀功的人，但往往是团队中贡献最大的人。',
+loveStyle:'处女座在爱情中的表达方式是含蓄而实际的。他们不会用华丽的辞藻来表白，但会用实际行动来证明自己的爱。帮你整理房间、提醒你按时吃饭、研究最适合你身体的饮食方案，这些细微之处才是处女座爱你的证据。他们可能会指出你的缺点，但那只是因为他们希望你变得更好。\n\n处女座在感情中最大的挑战是克服自己的批判性。他们的完美主义可能让伴侣感到压力巨大，觉得自己永远不够好。处女座需要学会：爱不是把对方打磨成理想模样，而是接纳对方原本的样子。当处女座学会用欣赏代替挑剔时，爱情会变得轻松而甜蜜。',
+careerMoney:'处女座在需要精确和分析力的职业中无人能及。医疗、科研、数据分析、会计、编辑、品质管理、营养学等领域都是他们的天赋所在。处女座的人不追求权力和名声，他们追求的是把事情做到极致的满足感。\n\n财务方面，处女座是十二星座中最精打细算的。他们很少有冲动消费的行为，每一笔支出都经过仔细考量。但有时候处女座也需要学会适度对自己好一点，不必所有事情都追求性价比。',
+growthChallenge:'处女座的核心成长课题是学会接受不完美。世界并非按照逻辑和秩序运行的机器，混乱和随机性也是生命之美的一部分。当处女座能够放松对完美的执念，拥抱生活中的不确定性和瑕疵时，他们反而会找到一种更深层次的完整和平静。',
+soulMission:{
+develop:['接纳不完美','自我慈悲','直觉与理性的平衡','享受当下','信任生命的流程'],
+leaveBehind:['过度批判自己和他人','焦虑和忧虑','控制每个细节的欲望','自我否定','完美主义陷阱'],
+achillesHeel:'对完美的偏执追求可能导致永远无法满足，在持续的自我批评中耗尽能量。处女座需要明白：你已经够好了，不需要通过不断地改进来证明自己的价值。'
+},
+goodMatch:[
+{sign:'金牛座',reason:'务实浪漫的土象组合，在安稳中共享品质生活'},
+{sign:'摩羯座',reason:'目标一致的事业伙伴，也是最可靠的生活搭档'},
+{sign:'巨蟹座',reason:'互相照顾的温暖组合，居家生活幸福美满'},
+{sign:'天蝎座',reason:'深度交流和信任，共同追求事物的本质'}
+],
+challengeMatch:[
+{sign:'射手座',reason:'精确vs随性，生活方式差异极大'},
+{sign:'双子座',reason:'同为水星守护却走向不同极端，需要互补包容'},
+{sign:'白羊座',reason:'谨慎vs冲动的碰撞，价值观需要磨合'}
+]
+},
+{
+id:'libra',name:'天秤座',symbol:'♎',emoji:'♎',dates:'9.23-10.23',
+element:'air',elName:'风象',quality:'开创',ruler:'金星',rulerEn:'Venus',
+rulerDesc:'赋予审美品位、社交魅力与和谐追求',
+keyword:'平衡',phrase:'我权衡 (I Balance)',
+gem:'欧泊石',color:'粉色/淡蓝',luckyNums:[6,7,15],luckyDay:'星期五',flower:'玫瑰',metal:'铜',bodyPart:'肾脏/腰部',
+traits:['优雅迷人','追求公正','审美卓越','善于调停','社交达人','选择困难','理想主义','重视和谐','品位不凡','外交天赋'],
+strengths:'天秤座是黄道带上的美学大师和和平使者，金星赋予他们对美和和谐的极致追求。天秤座的人有一种与生俱来的优雅，无论是穿衣打扮、说话方式还是处事风格，都散发着一种让人舒适的平衡感。他们是天生的外交官，能够在对立的双方之间找到共识，用温和而坚定的方式化解冲突。\n\n天秤座对公平正义有着近乎信仰般的执着。他们无法忍受任何形式的不公平，会用自己的方式去为弱势的一方说话。在他们看来，一个和谐的世界不是没有冲突的世界，而是每个人都被公平对待的世界。天秤座的人还拥有卓越的审美品位，他们能够在日常生活中创造出美感，把平凡的事物变得精致而有质感。',
+loveStyle:'天秤座是为爱情而生的星座。作为金星守护的风象星座，他们对浪漫有着天然的理解和追求。天秤座的人在恋爱中温柔体贴、富有情调，懂得如何营造浪漫的氛围。他们是最好的约会伴侣，总能找到最美的餐厅、最动人的音乐和最恰到好处的赞美。\n\n天秤座的感情困境在于"完美伴侣"的幻想。他们可能在寻找那个理想中的人的过程中错过了眼前真实的缘分。此外，天秤座过于在意和谐可能导致回避冲突，把问题积压到最后爆发。他们需要学会：真正健康的关系不是没有争吵，而是能够在争吵后更加理解和亲近对方。',
+careerMoney:'天秤座在需要审美眼光、人际协调和公平判断的领域中如鱼得水。法律、外交、设计、时尚、艺术策展、人力资源、公关等职业最能发挥他们的天赋。天秤座不喜欢独断专行，他们更擅长在团队中扮演协调者和决策参与者的角色。\n\n在金钱方面，天秤座有着优质的消费品位，但有时候对美好事物的追求可能导致入不敷出。他们需要学会在享受生活和理性理财之间找到那个完美的平衡点。',
+growthChallenge:'天秤座最核心的成长课题是学会做决定并为之承担后果。他们的天秤特质让他们总是在两个选项之间摇摆不定，追求一种不可能存在的完美平衡。当天秤座意识到每个选择都有代价，而不选择本身就是最大的代价时，他们会变得更加果断和强大。',
+soulMission:{
+develop:['独立做决定的勇气','面对冲突的能力','真实表达自己的立场','不取悦他人的底气','内在的和谐'],
+leaveBehind:['犹豫不决','过度讨好','回避冲突','依赖他人的认可','追求表面和谐'],
+achillesHeel:'为了维持表面的和平而牺牲自己的真实需求和立场，最终在不断的妥协中失去自我。天秤座需要明白：真正的平衡不是取悦所有人，而是在忠于自己的同时与他人和谐共处。'
+},
+goodMatch:[
+{sign:'双子座',reason:'风象知音，智慧交流与社交默契的完美组合'},
+{sign:'水瓶座',reason:'理念相近的灵魂伴侣，一起改变世界'},
+{sign:'狮子座',reason:'最闪亮的社交组合，互相欣赏对方的优雅和热情'},
+{sign:'射手座',reason:'乐观向上的组合，一起探索生活的美好'}
+],
+challengeMatch:[
+{sign:'摩羯座',reason:'浪漫vs实际，社交vs事业，需要找到共同语言'},
+{sign:'巨蟹座',reason:'社交蝴蝶vs居家达人，生活方式差异明显'},
+{sign:'白羊座',reason:'温和vs直接的冲突，但对宫吸引力强大'}
+]
+},
+{
+id:'scorpio',name:'天蝎座',symbol:'♏',emoji:'♏',dates:'10.24-11.22',
+element:'water',elName:'水象',quality:'固定',ruler:'冥王星',rulerEn:'Pluto',
+rulerDesc:'赋予洞察力、转化力与不可阻挡的意志',
+keyword:'蜕变',phrase:'我渴望 (I Desire)',
+gem:'黄玉',color:'深红/黑色',luckyNums:[8,11,18],luckyDay:'星期二',flower:'秋菊',metal:'铁/钚',bodyPart:'生殖系统',
+traits:['洞察力强','意志坚定','神秘深邃','爱恨分明','直觉敏锐','策略大师','忠诚专一','富有磁性','极具深度','不屈不挠'],
+strengths:'天蝎座是黄道带上最深邃的星座，冥王星赋予他们穿透表象直达本质的洞察力和凤凰涅槃般的转化能力。天蝎座的人有一双能看穿灵魂的眼睛，在他们面前，一切伪装和谎言都无所遁形。他们不说废话，不做表面文章，对他们来说，真相永远比体面更重要。\n\n天蝎座的意志力在十二星座中无人能及。一旦他们设定了目标，就会以不可阻挡的决心去达成，哪怕需要经历最艰难的考验。他们有着"不成功便成仁"的气魄，这种极致的专注力和韧性让他们在任何领域都能做到顶尖。天蝎座还拥有强大的直觉力，他们的第六感往往比任何逻辑分析都要准确。',
+loveStyle:'天蝎座的爱情是十二星座中最浓烈、最深沉的。他们不玩暧昧，不搞暗示，一旦爱了就是全身心的投入。天蝎座的爱如同深海，表面看起来平静甚至冷漠，底下却暗流涌动，蕴含着足以改变一切的力量。被天蝎座深爱的人，会体验到一种被完全看见、被完全接纳的震撼。\n\n但天蝎座的占有欲和嫉妒心也是感情中的最大考验。他们很难容忍背叛，哪怕是微小的不忠也可能触发他们报复的本能。天蝎座需要学会：爱不等于控制，信任是爱情最宝贵的礼物。当天蝎座学会用信任代替猜疑，用宽恕代替报复时，他们的爱情将达到一种超凡的深度和美好。',
+careerMoney:'天蝎座在需要深度洞察和策略思维的领域中不可替代。心理学、侦探、外科医生、金融分析、研究科学、危机管理等职业最能发挥他们的天赋。天蝎座的人不适合平庸的工作，他们需要有挑战性的、能触及事物核心的职业来激发他们的热情。\n\n在金钱方面，天蝎座有着敏锐的财务嗅觉。他们擅长在别人恐惧时贪婪、在别人贪婪时恐惧，这使他们成为优秀的投资者。但他们也需要警惕权力和金钱对自己的腐蚀，保持初心和底线。',
+growthChallenge:'天蝎座最深层的成长课题是学会放下。无论是过去的伤害、对他人的怨恨，还是对控制的渴望，天蝎座都需要学会松开紧握的双手。当他们意识到真正的力量不在于控制一切，而在于有能力放下一切时，他们就完成了最深刻的蜕变。',
+soulMission:{
+develop:['宽恕与释然','信任他人的能力','脆弱中的力量','分享控制权','透过黑暗看见光明'],
+leaveBehind:['报复心','过度猜疑','操控他人','执着于痛苦','全有或全无的极端思维'],
+achillesHeel:'对背叛的极度恐惧可能让天蝎座在亲密关系中不断测试对方的忠诚，反而推走了真正爱他们的人。天蝎座需要勇敢地选择信任，即便它可能带来伤害。'
+},
+goodMatch:[
+{sign:'巨蟹座',reason:'灵魂深处的共鸣，彼此的忠诚和深情完美匹配'},
+{sign:'双鱼座',reason:'两个水象星座的梦幻连接，直觉和感情的完美融合'},
+{sign:'处女座',reason:'深度和专注的结合，共同追求卓越'},
+{sign:'摩羯座',reason:'两个最有毅力的星座，一起征服世界'}
+],
+challengeMatch:[
+{sign:'狮子座',reason:'两个强势星座的权力之争，需要大量的互相尊重'},
+{sign:'水瓶座',reason:'情感深度vs理性距离的对立，理解方式截然不同'},
+{sign:'白羊座',reason:'两个火星相关星座的碰撞，激烈但消耗大'}
+]
+},
+{
+id:'sagittarius',name:'射手座',symbol:'♐',emoji:'♐',dates:'11.23-12.21',
+element:'fire',elName:'火象',quality:'变动',ruler:'木星',rulerEn:'Jupiter',
+rulerDesc:'赋予乐观精神、远见卓识与无尽的好奇心',
+keyword:'探索',phrase:'我看见 (I See)',
+gem:'绿松石',color:'紫色/蓝色',luckyNums:[3,9,12],luckyDay:'星期四',flower:'蒲公英',metal:'锡',bodyPart:'大腿/肝脏',
+traits:['乐观豁达','热爱自由','哲学思维','坦率直言','冒险精神','幽默风趣','博学多闻','胸怀远大','热情慷慨','不拘小节'],
+strengths:'射手座是黄道带上最自由的灵魂，木星的守护赋予了他们无边的乐观和对远方永恒的向往。射手座的人就像一支射向天空的箭，永远朝着更高更远的目标飞去。他们有着与生俱来的哲学思维，总是在问"为什么"和"如果"，不满足于事物的表面，渴望触及生命更深层的意义。\n\n射手座的乐观精神是真正具有感染力的。在他们看来，没有什么困难是不可克服的，没有什么梦想是不值得追寻的。他们的幽默感不是刻意的搞笑，而是一种对生活本身的豁达和享受。射手座的人走到哪里都能交到朋友，因为他们真诚、热情、不做作，和他们在一起，你会觉得世界充满了可能性。',
+loveStyle:'射手座在爱情中是最坦诚、最热情的伴侣，但也是最难被束缚的。他们需要一个能与自己并肩探索世界的伙伴，而不是一个试图把自己关在笼子里的人。射手座的爱情往往开始于一次旅行、一场深夜的哲学讨论或一个疯狂的冒险。\n\n射手座在感情中最大的挑战是对承诺的恐惧。他们害怕一段关系会限制自己的自由和可能性。但当射手座遇到那个既给予他们自由又能与他们分享世界的人时，他们会发现：真正的爱情不是牢笼，而是另一种形式的自由。他们需要学会：深度和承诺不等于失去自我。',
+careerMoney:'射手座在与旅行、教育、哲学、出版和跨文化交流相关的领域中最能发挥天赋。大学教授、旅行作家、外交官、宗教研究者、冒险运动员等都是他们的理想职业。射手座不适合朝九晚五的固定工作，他们需要自由度高、有成长空间的工作环境。\n\n在金钱方面，射手座比较随性，相信"钱够用就好"。木星的守护给了他们一种幸运的财务体质，钱来得容易但也可能去得快。学会适度储蓄和投资规划，会让射手座的财务状况更加稳固。',
+growthChallenge:'射手座最核心的成长课题是学会在自由和责任之间找到平衡。他们的逃避倾向可能让他们在面对需要坚持和忍耐的事情时选择放弃。当射手座学会"深度的自由比广度的自由更珍贵"时，他们会发现一个全新的内在世界等待他们去探索。',
+soulMission:{
+develop:['深度承诺的能力','耐心和坚持','注意细节','倾听他人的真诚','内在的哲学探索'],
+leaveBehind:['逃避责任','承诺恐惧','粗心大意','说话不经大脑','对新鲜感的过度追求'],
+achillesHeel:'对自由的极度追求可能导致射手座在需要坚守的时刻选择逃离，最终发现自己虽然走遍了世界，却没有一个真正属于自己的地方。射手座需要明白：最远的旅程不是从这里到天涯海角，而是从头脑到心灵。'
+},
+goodMatch:[
+{sign:'白羊座',reason:'两团火焰共舞，一起征服世界的最佳探险搭档'},
+{sign:'狮子座',reason:'热情与豪迈的完美结合，永远充满欢笑'},
+{sign:'天秤座',reason:'社交和审美的共鸣，一起享受生活的美好'},
+{sign:'水瓶座',reason:'思想碰撞的火花，两个理想主义者的精彩对话'}
+],
+challengeMatch:[
+{sign:'处女座',reason:'随性vs严谨，两种截然不同的人生态度'},
+{sign:'双鱼座',reason:'都有逃避现实的倾向，需要有人脚踏实地'},
+{sign:'金牛座',reason:'冒险vs安稳，两种完全不同的生活节奏'}
+]
+},
+{
+id:'capricorn',name:'摩羯座',symbol:'♑',emoji:'♑',dates:'12.22-1.19',
+element:'earth',elName:'土象',quality:'开创',ruler:'土星',rulerEn:'Saturn',
+rulerDesc:'赋予纪律、责任感与不屈不挠的攀登精神',
+keyword:'成就',phrase:'我利用 (I Use)',
+gem:'石榴石',color:'黑色/深棕',luckyNums:[4,8,22],luckyDay:'星期六',flower:'三色堇',metal:'铅',bodyPart:'骨骼/膝盖',
+traits:['志向远大','自律严格','责任感强','务实稳重','深藏不露','老成持重','策略思维','坚韧不拔','内敛含蓄','厚积薄发'],
+strengths:'摩羯座是黄道带上最有野心和毅力的攀登者，土星赋予他们的不是轻松的天赋，而是通过纪律和时间锻造出来的真正实力。摩羯座的人像一座沉默的山峰，不张扬、不炫耀，但每一步都走得坚实有力。他们深知：通往顶峰没有捷径，只有日复一日的坚持和自律。\n\n在摩羯座严肃冷静的外表下，其实隐藏着一颗极其深情和敏感的心。他们不是不会感动，而是选择把感情深埋在心底，用行动来表达。一个摩羯座默默为你做的一切，往往比任何甜言蜜语都更有分量。他们是真正的"大器晚成"型人才，年轻时可能不如其他星座耀眼，但时间会证明他们是最后的赢家。',
+loveStyle:'摩羯座在爱情中是最沉稳、最可靠的伴侣。他们不会轻易开口说"我爱你"，但一旦说出口，那就是一生的承诺。摩羯座的爱情像一棵百年大树，需要时间来扎根和成长，但一旦长成，就能遮风挡雨、万古长青。他们用最实际的方式表达爱意：努力工作给你好的生活、默默解决你遇到的困难、在你脆弱时成为你最坚实的后盾。\n\n摩羯座在感情中的课题是学会敞开心扉。他们的自我保护机制使他们很难在感情中展示脆弱的一面，而这恰恰是建立深度亲密关系所必需的。当摩羯座勇敢地摘下那副"我很坚强"的面具，让伴侣看到真实的自己时，他们会发现爱情原来可以这么温暖。',
+careerMoney:'摩羯座是十二星座中最有事业心的。他们天生就懂得在体制内攀升的规则，知道什么时候该忍耐、什么时候该出手。CEO、政治家、建筑师、工程师、金融家等高位职业中，你总能找到摩羯座的身影。他们不是靠运气，而是靠实力和策略一步步走上巅峰。\n\n在金钱方面，摩羯座有着最审慎的理财观。他们很早就开始为未来规划，善于长期投资，很少做出冲动的财务决策。摩羯座的人相信"慢慢变富"比"一夜暴富"更加可靠，而时间通常会证明他们是对的。',
+growthChallenge:'摩羯座最核心的成长课题是学会放松和享受当下。他们的整个人生都在为未来的目标努力，却常常忘记了生活不只是一个需要征服的目标，还是一场需要享受的旅程。当摩羯座学会在攀登的路上停下来，欣赏沿途的风景，享受此刻的阳光，他们会发现人生的意义不仅在山顶，更在每一步脚印中。',
+soulMission:{
+develop:['享受当下的能力','表达情感的勇气','工作与生活的平衡','柔软和脆弱的力量','自我关怀'],
+leaveBehind:['工作狂倾向','情感压抑','过度控制','悲观主义','把自我价值等同于成就'],
+achillesHeel:'把全部的人生意义建立在外在成就之上，当事业受挫或目标无法达成时，可能陷入深度的自我否定和抑郁。摩羯座需要铭记：你的价值不取决于你的头衔和成就，你本身就已经足够。'
+},
+goodMatch:[
+{sign:'金牛座',reason:'两个土象星座的坚实联盟，共同建设物质和精神的丰盛'},
+{sign:'处女座',reason:'务实和完美的结合，在细节中找到真爱'},
+{sign:'天蝎座',reason:'同样深沉而有毅力，一起攀登人生的高峰'},
+{sign:'双鱼座',reason:'对宫的互补之美，理性与感性的完美平衡'}
+],
+challengeMatch:[
+{sign:'白羊座',reason:'耐心vs冲动，两种完全不同的行事风格'},
+{sign:'天秤座',reason:'务实vs浪漫，需要学会欣赏彼此的不同'},
+{sign:'双子座',reason:'深度vs广度，沟通方式需要大量调适'}
+]
+},
+{
+id:'aquarius',name:'水瓶座',symbol:'♒',emoji:'♒',dates:'1.20-2.18',
+element:'air',elName:'风象',quality:'固定',ruler:'天王星',rulerEn:'Uranus',
+rulerDesc:'赋予革新精神、独立思想与人道主义',
+keyword:'革新',phrase:'我知道 (I Know)',
+gem:'紫水晶',color:'电蓝色',luckyNums:[4,7,11],luckyDay:'星期六',flower:'兰花',metal:'铀',bodyPart:'小腿/循环系统',
+traits:['独立特行','人道主义','创新思维','博爱精神','理性客观','叛逆不羁','远见卓识','思想前卫','友善亲和','不走寻常路'],
+strengths:'水瓶座是黄道带上最具前瞻性的革新者，天王星赋予他们打破常规、改变世界的使命和能力。水瓶座的人活在未来，当所有人还在按部就班地走旧路时，他们已经在脑海中构建了一个全新的世界。他们不是为了叛逆而叛逆，而是真正相信有更好的方式存在，并且愿意为之付出努力。\n\n水瓶座有一种独特的矛盾魅力：他们是最友善的人之一，对全人类怀有真诚的关怀，但同时又保持着一种情感上的距离感。他们的朋友遍天下，但真正走进内心的人寥寥无几。这不是冷漠，而是一种自我保护的方式，也是他们保持思维独立性的需要。水瓶座的思想像闪电一样快速而明亮，他们总能看到别人看不到的可能性和联系。',
+loveStyle:'水瓶座在爱情中最看重的是精神上的共鸣和个人空间的尊重。他们不会因为恋爱而失去自我，也不希望伴侣因为爱情而放弃自己的世界。水瓶座理想中的爱情是两个独立而有趣的灵魂选择走在一起，保持各自的光芒，同时照亮共同的道路。\n\n水瓶座在感情中最大的挑战是情感的表达和亲密度。他们可能在智识上完全敞开，但在情感上却始终保持一层隔膜。伴侣可能会觉得水瓶座"什么都聊得来，就是聊不到心里去"。水瓶座需要学会：亲密关系需要的不仅是思想的碰撞，还有心与心的坦诚相对。',
+careerMoney:'水瓶座在科技、社会创新、公益、航空航天、编程、心理学等领域中特别出色。他们是天生的发明家和改革者，总能在旧体系中找到创新的突破口。水瓶座不在乎传统的职业路径，他们更关心自己的工作是否有意义、是否能让世界变得更好。\n\n在金钱方面，水瓶座可能是十二星座中对物质最不执着的。他们追求的是思想和精神的富足，而不是银行账户的数字。但这并不意味着他们不善于赚钱，事实上他们的创新能力常常能为他们带来意想不到的财富。',
+growthChallenge:'水瓶座的核心成长课题是学会在理性和情感之间建立桥梁。他们过度依赖头脑，可能会导致与自己的情感世界脱节。当水瓶座学会不仅用大脑去理解世界，还用心灵去感受世界时，他们的思想将变得更加有温度、有力量、有生命力。',
+soulMission:{
+develop:['情感表达能力','一对一的深度亲密','接纳个人情感的价值','脚踏实地的行动力','从博爱到专爱'],
+leaveBehind:['情感疏离','逃避深度亲密','过度理想化','叛逆for叛逆','与人群保持距离'],
+achillesHeel:'对个体独立性的过度强调，可能让水瓶座在需要依赖他人时选择孤独硬撑。他们需要明白：寻求帮助不是软弱的表现，让人走近不等于失去自由，真正的独立包含了选择相互依赖的勇气。'
+},
+goodMatch:[
+{sign:'双子座',reason:'两个风象星座的智慧碰撞，永远有新的话题和创意'},
+{sign:'天秤座',reason:'社交和理念的共鸣，一起创造美好的社会'},
+{sign:'射手座',reason:'自由灵魂的相遇，一起探索思想和世界的边界'},
+{sign:'白羊座',reason:'叛逆和勇气的结合，互相欣赏对方的独立精神'}
+],
+challengeMatch:[
+{sign:'金牛座',reason:'创新vs传统的根本分歧，生活方式差异巨大'},
+{sign:'天蝎座',reason:'超脱vs深陷的矛盾，情感表达方式截然不同'},
+{sign:'狮子座',reason:'对宫的张力，个人主义vs集体主义的碰撞'}
+]
+},
+{
+id:'pisces',name:'双鱼座',symbol:'♓',emoji:'♓',dates:'2.19-3.20',
+element:'water',elName:'水象',quality:'变动',ruler:'海王星',rulerEn:'Neptune',
+rulerDesc:'赋予梦幻直觉、艺术天赋与无条件的慈悲',
+keyword:'超越',phrase:'我相信 (I Believe)',
+gem:'海蓝宝',color:'海蓝色/银色',luckyNums:[3,7,12],luckyDay:'星期四',flower:'水仙',metal:'锡',bodyPart:'足部',
+traits:['梦幻浪漫','慈悲为怀','直觉超群','艺术天赋','善解人意','多愁善感','想象丰富','灵性直觉','自我牺牲','与万物共情'],
+strengths:'双鱼座是黄道带的最后一个星座，融合了前面十一个星座的所有特质，因此拥有最丰富的灵魂和最深沉的共情力。海王星的守护赋予了他们如梦如幻的想象力和穿越物质世界直达灵魂深处的能力。双鱼座的人像一面灵魂的镜子，能够映照出每个人内心最真实的渴望和恐惧。\n\n双鱼座的创造力是十二星座中最具灵性的。他们的灵感不是来自于逻辑分析，而是来自于与宇宙的深层连接。最伟大的音乐家、画家、诗人和电影导演中，有大量双鱼座的身影。他们有一种将无形的情感和灵性体验转化为有形艺术作品的神奇能力，让人在他们的作品中看到另一个维度的美。',
+loveStyle:'双鱼座在爱情中是最浪漫、最无私的伴侣。他们对爱情有着童话般的幻想，相信灵魂伴侣的存在，渴望那种超越时空的深度连接。双鱼座的爱是无条件的给予，他们愿意为爱人做任何事，甚至不惜牺牲自己。当双鱼座爱上一个人时，他们会把对方理想化，赋予对方所有美好的品质。\n\n双鱼座在感情中最大的课题是学会保护自己。他们的无条件给予可能被不良之人利用，他们对爱情的理想化可能导致一次次的幻灭。双鱼座需要学会：爱一个人不等于失去自己，你不需要通过牺牲来证明爱的深度。设立健康的边界，不是对爱的背叛，而是对爱最深的尊重。',
+careerMoney:'双鱼座在艺术、音乐、电影、心理咨询、灵性疗愈、海洋学、慈善等领域中特别出色。他们的共情力和直觉力使他们成为优秀的治疗师和艺术家。双鱼座不太适合高度竞争和利益至上的环境，他们需要一个能够滋养灵魂的工作空间。\n\n在金钱方面，双鱼座可能是十二星座中最不擅长理财的。他们容易在情感冲动下做出消费决定，也可能因为慷慨而过度给予。找一个靠谱的财务顾问，建立自动储蓄机制，是双鱼座保障财务健康的明智之举。',
+growthChallenge:'双鱼座最核心的成长课题是学会在梦想和现实之间建立桥梁。他们有着最美好的理想和最深邃的感悟，但如果不能将这些转化为现实中的行动，就只能停留在空想的层面。当双鱼座学会脚踏实地，把内在的灵性力量转化为外在的创造力时，他们将成为改变世界的力量。',
+soulMission:{
+develop:['健康的自我边界','脚踏实地的执行力','分辨现实与幻想','内在力量与自信','把梦想变成现实'],
+leaveBehind:['逃避现实','自我牺牲倾向','易受影响','沉溺幻想','受害者心态'],
+achillesHeel:'过度的共情力可能让双鱼座吸收周围所有人的负面情绪，导致能量耗竭和精神混乱。他们需要学会区分自己的情绪和他人的情绪，建立一个灵性的保护罩，在慈悲的同时保护好自己。'
+},
+goodMatch:[
+{sign:'天蝎座',reason:'两个水象星座的深度灵魂连接，直觉和感情完美共鸣'},
+{sign:'巨蟹座',reason:'温柔滋养的组合，共同创造一个充满爱的避风港'},
+{sign:'金牛座',reason:'梦想与现实的完美平衡，双鱼提供灵感，金牛提供稳定'},
+{sign:'摩羯座',reason:'对宫的互补，一个仰望星空一个脚踏实地，彼此完整'}
+],
+challengeMatch:[
+{sign:'双子座',reason:'感性vs理性的冲突，沟通层面可能存在错位'},
+{sign:'射手座',reason:'都有逃避倾向，需要有人来负责脚踏实地'},
+{sign:'处女座',reason:'对宫的张力，理想主义vs现实主义需要磨合'}
+]
+}
 ];
 
-// ========== FORTUNE ENGINE (based on transit astrology) ==========
-// Seeded PRNG for deterministic content
-function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t^=t+Math.imul(t^t>>>7,61|t);return((t^t>>>14)>>>0)/4294967296}}
+// Sign lookup maps
+const SIGN_MAP={};const SIGN_IDX={};
+SIGNS.forEach((s,i)=>{SIGN_MAP[s.id]=s;SIGN_IDX[s.id]=i});
 
-function dateSeed(dateStr,signIdx,salt){
-  let h=0;const s=dateStr+signIdx+salt;
-  for(let i=0;i<s.length;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0}
-  return Math.abs(h);
+// ============================================================
+// FORTUNE TEMPLATE POOLS (massive)
+// ============================================================
+const T={
+// Overall fortune templates
+overallHigh:[
+"今天星象格局对你极为有利，{ruler}与木星形成优美的拱相位，这意味着好运之门正在为你敞开。无论是事业上的重要决策还是人际关系中的沟通交流，都有可能获得超出预期的好结果。把握住每一个出现在面前的机会，宇宙正站在你这边。",
+"星象能量正以前所未有的方式支持着你。太阳与{ruler}的和谐相位如同宇宙为你点亮的舞台灯光，你的个人魅力和表现力达到巅峰。今天适合展示自己的才华和想法，周围的人会被你的自信和热情所感染。抓住这个能量高峰期，做出那些你一直犹豫不决的决定。",
+"木星正穿越对你有利的宫位，带来扩展和幸运的能量。同时{ruler}的顺行状态确保你的判断力和执行力都处于最佳水平。今天是一个值得记住的日子，宇宙的安排可能会以某种意想不到的方式为你带来惊喜。保持开放的心态，让好事自然发生。",
+"金星与{ruler}之间的三合相位在今天达到精确角度，为你的生活注入和谐与美好的能量。你会发现人际关系中的摩擦减少了，合作变得更加顺畅，甚至可能收到来自远方的好消息。趁着这股好运，推进那些需要他人配合的计划和项目。",
+"今天的星象呈现出一幅令人振奋的画面。{ruler}进入了一个充满活力和创造力的区域，与火星形成了激励人心的六合相位。你的精力充沛、思维敏捷，正是开拓新领域、挑战自我极限的绝佳时机。大胆去做，星象支持你的每一步行动。"
+],
+overallMid:[
+"今天的星象能量较为平稳，{ruler}运行在一个需要你保持稳健的位置。虽然没有特别强劲的好运加持，但也没有什么明显的阻碍。这是一个适合稳步推进日常计划、处理琐碎事务的日子。不要急于求成，把手头的事情做好，积累终将转化为突破。",
+"水星与{ruler}之间形成了一个微妙的角度，提醒你在沟通和决策时要更加谨慎。今天不太适合做出重大改变或冒险的决定，但非常适合深入思考和规划未来。利用这段相对平静的时间来整理思绪，为即将到来的机遇做好准备。",
+"月亮穿越你的服务宫位，提醒你关注日常生活的细节和身体健康。今天的能量更偏向内在调整而非外在扩张。花一些时间整理你的工作空间和生活环境，照顾好自己的身体，为下一个能量高峰期蓄势待发。",
+"今天{ruler}与土星形成了一个需要你脚踏实地的角度。这不是一个适合做白日梦的日子，但却是一个适合把梦想变成具体计划的日子。放下那些不切实际的期望，专注于你能够控制的事情，踏实的努力会为你带来长远的回报。",
+"星象显示今天是一个需要平衡各方面的日子。{ruler}在你的命盘中创造了一个过渡性的能量场，旧的事物正在缓慢退出，新的可能性还在酝酿中。保持耐心和信心，这段过渡期很快就会结束，更好的篇章正在被书写。"
+],
+overallLow:[
+"今天需要格外注意，{ruler}与冥王星形成了一个紧张的四分相位，可能会带来一些压力和挑战。这不是世界末日，但确实需要你放慢脚步，更加谨慎地对待今天遇到的每一个决定。避免冲动行事，在做出重要选择前多思考片刻。",
+"火星与{ruler}之间的对冲相位可能让你感到有些焦躁不安。今天的能量比较紧张，容易在人际关系中产生摩擦或误解。深呼吸，保持冷静，不要在情绪上头的时候做出让自己后悔的事情。这股紧张的能量明天就会缓解。",
+"土星的影响力在今天比较明显，{ruler}接收到来自土星的限制性能量。你可能会遇到一些延迟、障碍或者需要额外付出的情况。不要气馁，把这些看作是宇宙对你的考验和锻炼。挺过这一关，你会变得更加强大和成熟。",
+"今天的星象提醒你要保持低调和谨慎。{ruler}正在经过一个能量较低的区域，你的判断力和直觉可能不如平时敏锐。避免做出重大的财务决策或人际承诺，把精力放在已经在进行中的事务上，等待更好的时机来启动新项目。"
+],
+// Love templates
+loveHigh:[
+"金星正以最温柔的姿态穿越你的感情宫位，为你的爱情生活注入甜蜜和浪漫的能量。单身的你今天的桃花运特别旺盛，可能在意想不到的地方遇到令你心动的人。有伴侣的你则会感受到彼此之间更深的情感连接，一个温暖的拥抱或一句真诚的话语就能让两颗心更加贴近。",
+"月亮与金星的和谐相位今天在你的感情领域形成了一道美丽的彩虹。你的魅力值飙升到最高点，说出的每一句话都仿佛带着磁性。这是表白、约会、深入交谈的绝佳时机。如果你一直在等待感情中的某个信号，今天很可能就会收到。",
+"木星拱相位为你的第五宫带来了扩展的能量，爱情运势如同春天盛开的花园般灿烂。你会发现自己比平时更加开放和吸引人，无论是新的相遇还是旧的感情，都有机会迎来美好的发展。勇敢地打开心扉，让爱自由地流动。",
+"海王星在你的感情宫位中创造了一种梦幻般的浪漫氛围。你的直觉力在爱情方面特别准确，能够敏锐地感受到对方的心意和需求。今天适合和爱人一起做一些有创意的事情，比如看一部好电影、听一场音乐会或者一起散步看星星。",
+"火星与金星的六合相位点燃了你心中的爱情之火。你今天散发着一种无法抗拒的魅力和热情，吸引着志同道合的灵魂靠近你。无论是初识的心动还是长久的陪伴，今天都是用行动表达爱意的好日子。不要犹豫，爱就大声说出来。"
+],
+loveMid:[
+"感情方面今天比较平稳，金星运行在一个需要你投入耐心的位置。不要期待今天会有戏剧性的浪漫事件发生，但那些日常中的小温暖和小确幸才是感情最坚实的基础。给伴侣发一条关心的消息，或者认真倾听对方的心事。",
+"月亮穿越你的沟通宫位，提醒你今天在感情中需要更加注意表达方式。有些话说出来的效果可能和你想象的不太一样，在发出信息或说出口之前，花几秒钟想想对方会怎么理解。好的沟通是好的感情的前提。",
+"水星在你的感情领域制造了一些需要思考的话题。也许是需要和伴侣讨论一些实际的问题，也许是需要重新审视自己对感情的期待。今天不是做浪漫决定的时候，但是一个梳理感情脉络的好时机。",
+"今天的星象显示你在感情中可能需要一些独处的时间。这不是消极的信号，而是宇宙提醒你：偶尔回到自己的世界里充充电，才能在感情中给出更好的自己。做一些让自己开心的事情，保持个人的活力和魅力。"
+],
+loveLow:[
+"金星与土星的紧张相位可能给感情带来一些考验。你可能会感到伴侣有些疏离，或者自己对感情的安全感降低了。不要在这个时候做出冲动的决定或说出伤人的话，给彼此一些空间和时间，这只是暂时的低谷。",
+"火星与{ruler}的冲突相位可能在感情中制造一些小摩擦。也许是一个误解、一次小争吵或者一个让你不舒服的场景。记住，所有的关系都会经历高低起伏，重要的是你如何处理这些低谷时刻。深呼吸，选择理解和包容。",
+"今天的星象提醒你在感情中要特别注意控制情绪。月亮与冥王星的角度可能放大你的不安全感和嫉妒心。把这些感受当作了解自己内心的线索，而不是向外投射的理由。和信任的朋友聊聊，或者写日记来疏导情绪。"
+],
+// Career templates
+careerHigh:[
+"太阳与{ruler}的合相为你的事业宫位注入了强大的能量，你在工作中的表现力和领导力今天达到巅峰。同事和上级都能感受到你散发出的自信和专业素养，这是争取升职、加薪或展示新提案的绝佳时机。抓住机会，让你的才华被更多人看见。",
+"木星正在你的第十宫散发着扩展的光芒，事业运势如日中天。你可能会接到一个重要的项目或者获得一个你一直期待的机会。今天的关键词是'大胆'，不要因为谦虚而拒绝那些看起来超出你能力范围的挑战，宇宙相信你可以。",
+"水星与木星的三合相位为你的职场沟通带来了好运。今天你说出的每一句话都充满说服力，无论是汇报工作、谈判合作还是面试，都能展现出最佳状态。利用这个语言表达力高峰期，把你的想法和计划清晰地传达给关键人物。",
+"{ruler}进入你的事业宫位，标志着一个新的事业周期的开始。你可能会突然看清自己的职业方向，或者获得一个改变职业轨迹的机会。今天做出的事业决定很可能会影响未来几个月甚至几年的发展，认真对待每一个选择。",
+"火星在你的第六宫带来充沛的工作能量，你今天的效率和执行力让人刮目相看。那些堆积已久的工作任务在你手中变得游刃有余，甚至还能挤出时间来思考更长远的职业规划。趁热打铁，把计划变成行动。"
+],
+careerMid:[
+"今天的职场能量比较平稳，适合处理日常工作和完善细节。{ruler}的位置提醒你不要急于扩张，而是把手头的事情做精做好。有时候，真正的职业成长不在于做了多少新项目，而在于把每一个已有的项目都做到极致。",
+"水星在你的工作领域创造了一个需要沟通和协调的能量场。今天可能需要处理一些团队配合或者跨部门协作的事务。保持耐心和灵活性，不要固执己见，多听取不同的意见和建议。好的团队合作往往能产生超出个人能力的成果。",
+"土星的影响提醒你今天要注重效率和时间管理。可能有些任务的截止日期在逼近，或者某些承诺需要你认真兑现。列一个清晰的优先级清单，一件一件地完成，不要让焦虑拖慢你的步伐。稳扎稳打就是最好的策略。",
+"月亮过境你的工作宫位，今天你对职场环境的感受比平时更加敏锐。你可能会注意到一些之前忽略的细节和动态，这些信息对于调整你的职场策略很有价值。观察和倾听比行动更重要的一天。"
+],
+careerLow:[
+"火星与土星的冲突相位可能在工作中制造一些阻碍和挫折。你的计划可能遇到延迟，或者某个合作方突然改变了主意。不要把这些看作失败的信号，而是宇宙在提醒你调整策略。有时候，绕路走反而能发现新的风景。",
+"今天的星象显示职场可能出现一些人际方面的挑战。{ruler}与火星的紧张角度容易让人变得急躁和不耐烦，工作中的分歧可能被放大。保持职业素养，不要在情绪上头的时候发邮件或做决定。冷静是你今天最好的盔甲。",
+"冥王星的影响力今天比较强，可能在事业方面带来一些深层的变动或不确定性。也许是一个项目的方向改变，也许是一个意想不到的竞争对手出现。保持警觉但不要恐慌，变化中往往蕴含着转机。"
+],
+// Wealth templates
+wealthHigh:[
+"木星与{ruler}的和谐相位为你的财富宫位带来了丰盛的能量。今天的财运非常好，可能会有意外的收入、投资回报或者某个赚钱的机会出现。如果你一直在考虑一个投资决定或财务计划，今天的直觉判断力特别准确，值得信赖。",
+"金星穿越你的第二宫，为你的物质世界撒下金色的祝福。你可能会发现一些之前忽略的理财机会，或者在购物时遇到特别划算的好东西。今天适合做一些财务规划，你对金钱和资源的判断力处于高峰期。",
+"火星过境第二宫，赚钱的动力和冲劲大增。你今天特别有商业头脑和行动力，适合推进那些能够带来经济回报的项目。如果你有副业计划或者创业想法，今天的能量非常支持你迈出第一步。",
+"太阳照亮了你的财富宫位，让你对自己的价值和赚钱能力充满信心。今天可能是加薪谈判、合同签署或者投资入手的好时机。宇宙提醒你：你值得拥有丰盛，不要因为不自信而低估自己的价值。",
+"水星与木星的三合为你带来了财务方面的好消息或新思路。一个关于理财的信息、一个赚钱的点子或者一份有利的报价可能在今天出现。保持敏锐的商业嗅觉，把握住每一个看似微小但潜力巨大的机会。"
+],
+wealthMid:[
+"今天的财务运势比较平稳，{ruler}在财富宫位的能量偏向保守。不建议做出大额的消费或投资决定，把重点放在日常开支管理和储蓄习惯的维护上。有时候，守住财富比创造财富更需要智慧。",
+"月亮穿越你的资源宫位，你对金钱的敏感度今天有所提升。这是一个适合审视自己消费习惯和财务状况的日子。看看上个月的账单，想想哪些支出是必要的、哪些可以优化。小小的调整可能带来长期的改善。",
+"水星的影响让你今天在财务方面需要更多的信息收集和分析。如果有人向你推荐一个投资机会，不要急于做决定，花时间做足功课再说。理性和谨慎是保护你财富的最佳武器。",
+"今天的星象显示你在金钱方面可能需要做出一些取舍。是把钱花在眼前的享受上，还是投资于未来的成长？不同的选择会带来不同的结果。听从内心的声音，做出对长远最有利的决定。"
+],
+wealthLow:[
+"海王星与{ruler}的迷乱角度可能在财务上造成一些混乱。今天特别要警惕冲动消费、不靠谱的投资建议以及任何看起来"太好了以至于不像真的"的赚钱机会。管好你的钱包，不要在情绪不稳定的时候做任何财务决定。",
+"土星在你的财富宫位施加了限制的能量，你可能会面临一些意料之外的开支或者收入方面的延迟。不要恐慌，这只是暂时的财务压力。检查你的预算，削减不必要的开支，等待这股限制能量过去后，财运会逐步回升。",
+"火星与冥王星的紧张角度可能带来一些财务方面的焦虑或损失风险。今天绝对不适合投机或赌博式的财务操作。把钱放在安全的地方，避免任何高风险的金融活动。保本比赚钱在今天更重要。"
+],
+// Health templates
+healthHigh:[
+"木星的吉利相位为你的身体注入了充沛的生命力，今天你的精力旺盛、免疫力强。这是一个适合开始新的健身计划或运动项目的日子。你的身体恢复能力也处于高峰期，如果最近有什么小毛病一直困扰你，可能会在这段时间自然缓解。",
+"月亮与金星的和谐相位为你的身心带来了平衡和愉悦的能量。你今天特别适合做一些滋养身体和心灵的事情：泡一个舒服的澡、做一次瑜伽、品尝健康美食或者享受一次按摩。善待自己的身体，它会用健康来回报你。",
+"太阳活力四射地照耀着你的健康宫位，你今天气色红润、精神饱满。抓住这种好状态，出门散步、呼吸新鲜空气、做一些户外运动。阳光和自然的能量会进一步增强你的生命力和幸福感。",
+"火星带来的充沛体能让你今天活力满满。身体的各项机能都处于良好状态，无论是力量训练还是有氧运动都能达到很好的效果。但也要注意适度运动，不要因为感觉太好就过度使用身体。"
+],
+healthMid:[
+"今天的健康运势总体平稳，但{ruler}提醒你要注意日常保健不能松懈。保持规律的作息和饮食，多喝水，不要因为工作忙碌就忽视了身体的基本需求。身体是革命的本钱，日常的小习惯决定了长期的大健康。",
+"月亮穿越与身体相关的区域，你今天可能对身体的信号更加敏感。如果感到哪里不舒服，不要忽视，它可能是身体在提醒你需要调整。早睡早起、均衡饮食、适量运动，这些老生常谈但永远有效。",
+"水星的能量提醒你今天要注意用脑过度带来的疲劳。长时间对着屏幕或高强度的脑力劳动可能导致头痛、眼睛疲劳或者肩颈不适。每工作一个小时记得站起来活动五分钟，让大脑和身体都能得到适当的休息。",
+"今天的星象没有特别的健康警示，但也没有特别的好运加持。保持你一贯的健康习惯就好，不需要做出什么特别的改变。一致性和坚持是健康最好的朋友。"
+],
+healthLow:[
+"火星与{ruler}的冲突角度可能让你今天容易感到疲劳和烦躁。身体可能比平时更容易出现一些小状况，比如头痛、肌肉紧张或者消化不良。今天不适合做剧烈运动或挑战身体极限，以休息和恢复为主。",
+"月亮与土星的紧张相位可能影响你今天的睡眠质量和情绪状态。你可能感到精力不足或者有些低落。这是身体在告诉你需要放慢节奏了。给自己一个安静的晚上，早点上床，明天又是充满能量的新一天。",
+"海王星的迷雾能量可能让你今天感到有些恍惚或者注意力不集中。特别注意行走和驾驶时的安全，避免在精神状态不佳时进行需要高度集中注意力的活动。如果可能的话，今天就让自己慢下来，好好休息。"
+],
+// Weekly overall
+weeklyOverallHigh:[
+"本周的星象对你来说非常有利。从周一开始，{ruler}与木星的三合相位就为你设定了一个积极向上的基调。周中是你能量最强的时候，无论是推进项目、发起合作还是做出重要决定，都能得到宇宙能量的支持。周四和周五金星的加入更是让你的人际关系如鱼得水。建议你把最重要的事情安排在周二到周四之间。",
+"本周星象显示一个令人兴奋的机遇窗口正在打开。水星在周一恢复顺行，之前被搁置的计划和项目终于可以重新启动。周三前后，太阳与{ruler}形成有力的合相，你的个人能量和影响力达到本周峰值。好好利用这股强劲的正能量，本周有潜力成为你这个月最丰收的一周。",
+"木星这周持续在你的命盘中散发幸运的光芒，带来贵人运和好运气。周一到周三适合社交和拓展人脉，周四和周五则是集中精力完成关键任务的最佳时段。周末的金星和谐相位让你在休息中也能收获惊喜。整体来看，这是一个值得积极行动、大胆争取的一周。"
+],
+weeklyOverallMid:[
+"本周的能量节奏有快有慢，需要你灵活调整。周一和周二可能还有上周留下来的事务需要收尾，不要急于开展新项目。周三是一个转折点，{ruler}进入新的度数，带来更清晰的方向感。周四和周五的能量最为活跃，把重要的会议和决策安排在这两天。周末适合放慢脚步，为下周储备能量。",
+"本周的星象提醒你要在进取和保守之间找到平衡。上半周太阳与土星的角度要求你脚踏实地、不要冒进，适合处理细节和完善计划。下半周水星与{ruler}的配合让沟通变得顺畅，是处理谈判和协商的好时段。整体来看，这是一个需要策略性行动的一周。"
+],
+weeklyOverallLow:[
+"本周的星象有些复杂，{ruler}与火星和土星分别形成了紧张的角度，可能会遇到一些挑战和阻碍。周一到周三是压力最大的时段，建议把重要决定推迟到周四之后。周五的金星和谐相位会缓解紧张的氛围。记住，困难只是暂时的，它们是让你变得更强大的训练。保持耐心，这周也会过去。",
+"本周需要你特别注意能量管理。星象显示前半周可能会遇到一些让人沮丧或困惑的情况，{ruler}与海王星的迷惑角度可能让你一时看不清方向。不要在这个时候做出重大决定。周四开始，月亮进入有利位置，视野会逐渐清晰。保持冷静，等待迷雾散去。"
+],
+// Monthly overall
+monthlyOverallHigh:[
+"本月的星象格局对你非常有利，堪称是近几个月来最好的运势周期之一。月初{ruler}与木星形成强大的三合相位，为你打开好运之门。月中太阳照亮你命盘中关键的区域，个人魅力和影响力达到巅峰。月末金星带来的和谐能量让人际关系和感情生活锦上添花。抓住这个月的每一天，大胆追求你的目标和梦想，宇宙正在全力以赴地支持你。",
+"这个月的星象呈现出一幅令人振奋的画面。从月初开始，你就能感受到一股积极向上的能量推动着你前进。中旬前后是本月最强劲的时段，事业机遇和财运都有显著提升的趋势。月底虽然节奏放缓，但之前积累的成果会在这个时候得到巩固和确认。建议你在上旬制定计划、中旬全力执行、下旬收获成果。"
+],
+monthlyOverallMid:[
+"本月的星象能量起伏较为明显，你需要学会顺应这个节奏来安排自己的计划。月初到十日左右，{ruler}运行在一个需要你调整和准备的区域，适合做规划和收集信息。十一日到二十日是本月能量最活跃的时段，把重要的行动安排在这个窗口期。月底二十一日之后，水星的影响提醒你要回顾和总结本月的经验教训，为下个月做准备。",
+"这个月需要你在不同领域之间灵活切换。星象显示月初的重心在人际关系和沟通上，中旬转向事业和财务，月底则需要关注身心健康和内在成长。不要试图同时兼顾所有方面，跟着宇宙的节奏走，每个阶段专注于当下最重要的事情。"
+],
+monthlyOverallLow:[
+"本月的星象有些严峻，{ruler}接连与土星和冥王星形成紧张角度，可能会经历一段压力较大的时期。月初到十五日前后是挑战最集中的阶段，可能会面临来自事业、关系或财务方面的考验。不要恐慌，这些考验的目的是让你重新审视自己的优先级和方向。十六日之后，随着金星和水星进入有利位置，情况会逐步好转。把这个月看作是一次深层的清理和重置。"
+],
+
+// Quarterly (PAID)
+quarterlyOverall:[
+"本季度的星象为你描绘了一幅{theme}的画卷。{ruler}在这三个月中将经历重要的相位变化，标志着你人生某个领域的深刻转型。第一个月是种子期，你需要播种新的想法和计划。第二个月是成长期，那些被精心呵护的种子开始发芽并展现出潜力。第三个月是收获期，之前的努力将开始结出果实。在整个过程中，木星的加持为你带来信心和机遇，但土星的提醒也不可忽视：只有脚踏实地的努力才能让机遇变成现实。建议你在季度初就制定一个清晰的三月计划，每月回顾一次进度，确保你始终走在正确的方向上。",
+"这个季度对你来说意义非凡。{ruler}与外行星的互动揭示了一些深层的成长机会和挑战。在{theme}方面，你将经历从困惑到清晰、从犹豫到坚定的转变过程。第一个月可能会有一些不确定性和调整，但这正是宇宙在为你清理旧能量、腾出新空间。第二个月开始，你会逐渐看清自己真正想要的是什么，行动的方向也变得更加明确。第三个月是实践和验证的时期，之前的洞见和计划将在现实中得到检验。整体而言，这个季度是一个重要的转折期，你做出的选择将影响未来一年的发展轨迹。"
+],
+
+// Yearly (PAID)
+yearlyOverall:[
+"2026年对你来说是一个{theme}的重要年份。{ruler}全年的运行轨迹显示，你正在经历一个从内在觉醒到外在蜕变的深刻过程。上半年的重心在于自我认知和方向调整，你可能会重新审视自己的人生目标和价值观，做出一些看似大胆但实际上酝酿已久的决定。下半年随着木星进入对你有利的位置，之前播下的种子将开始茁壮成长，带来实质性的进展和成果。在感情方面，今年的金星运行轨迹暗示着一段重要的感情经历或关系的深化。事业上，土星和冥王星的配合提醒你：真正的成功来自于对使命的坚持，而不是对头衔的追逐。财运方面整体呈上升趋势，但需要你在上半年打好基础、做好规划。健康方面要注意劳逸结合，别让雄心壮志透支了身体的资本。总的来说，2026年是一个播种和成长的年份，你今年做出的每一个努力都将在未来三到五年内持续给你回报。"
+],
+
+// Actionable tips
+tips:{
+love:["今天适合主动和暗恋对象搭话，一句简单的问候就是最好的开始","试着放下手机，和伴侣面对面地分享今天发生的事情","给自己一些独处的时间来思考感情中真正想要的是什么","写一封手写的信或便签给你在乎的人，纸质的温度是电子消息无法替代的","今天不妨约伴侣去一个你们都没去过的地方，新鲜感是关系的润滑剂"],
+career:["今天适合整理你的工作清单，按重要性排序，先完成最有价值的任务","在会议上勇敢地提出你的想法，即使它和主流意见不同","花十分钟时间写下你的三年职业愿景，清晰的目标是前进的动力","今天适合和行业前辈或导师请教，一句点拨可能胜过你一个月的摸索","检查一下你的LinkedIn或简历是否需要更新，时刻保持职业竞争力"],
+wealth:["检查一下你的订阅服务，取消那些已经不再使用的，省下来的是纯利润","今天适合研究一个你一直感兴趣但没有深入了解的投资领域","设定一个自动转账储蓄计划，每月固定存入一笔钱，让储蓄变成习惯","列一个本月的预算计划，把可控开支和不可控开支分开管理","如果你有一个副业想法，今天花一个小时来做可行性分析"],
+health:["今天试试在午餐后散步十五分钟，这个小习惯能显著改善你的消化和精力","睡前放下手机，读十页纸质书或做五分钟冥想，让大脑真正放松","多喝一杯水！大多数人的日常饮水量都不够，水是最好的美容和健康良药","尝试用楼梯代替电梯，小小的改变能为你的心肺功能带来意想不到的好处","今天找一个让自己开怀大笑的事情，笑是最好的免疫增强剂"]
+},
+
+// Power day descriptions
+powerDayDescs:[
+"今天是你的幸运日，贵人运旺盛，可能收到意想不到的好消息或机会。大胆行动！",
+"木星能量加持，适合签约、谈判、发起重要合作。你的判断力和说服力在今天特别强。",
+"金星与{ruler}形成梦幻角度，桃花运旺盛，也适合任何与美、艺术相关的活动。",
+"太阳照耀你的命盘关键区域，个人魅力和领导力达到峰值。展示你的才华！",
+"这一天财运亨通，适合做投资决策或争取涨薪。你对金钱的直觉今天特别准确。",
+"火星带来充沛的行动力，是开始新项目、挑战自我的最佳日子。勇敢迈出第一步！",
+"水星的智慧光芒照耀你，考试、写作、沟通都能发挥出最佳水平。动脑子的事情今天做！",
+"月亮与木星的温暖相位带来情感上的满足和家庭方面的好运。和家人分享你的快乐。"
+],
+cautionDayDescs:[
+"火星与{ruler}冲突，今天容易急躁和冲动。重要决定请推迟，避免与人发生正面冲突。",
+"水星逆行影响沟通，消息可能有误差。发重要邮件前请反复检查，签合同请格外谨慎。",
+"海王星迷雾笼罩，今天判断力可能打折扣。不适合做财务决定或签署重要文件。",
+"土星压力日，你可能感到疲惫或沮丧。不要和自己较劲，适度休息才能走更远的路。",
+"月亮与冥王星对冲，情绪波动较大。避免在不冷静的状态下处理感情问题或做出承诺。",
+"今天的星象提醒你注意健康和安全。避免冒险活动，注意交通安全，别在疲劳时开车。"
+],
+
+// Moon phase advice templates
+moonAdvice:{
+'新月':["新月是播种意图和设定目标的最佳时机。写下你的愿望清单，向宇宙许下你的心愿。对于{name}来说，这个新月特别适合在{area}方面设定新的起点。","新月的黑暗象征着无限的可能性。{name}可以利用这个时刻向内探索，倾听内心最真实的渴望。今天适合冥想、记日记和进行自我反思。"],
+'蛾眉月':["蛾眉月代表着新开始的萌芽。对{name}来说，现在是把新月时种下的意图付诸小行动的时候。不需要急于求成，一小步一小步地前进就好。","月亮开始展现她的光芒，你的计划也应该开始显露雏形。{name}今天适合做一些具体的准备工作，为即将到来的机遇打好基础。"],
+'上弦月':["上弦月带来行动和决断的能量。{name}可能面临一个需要做出选择的十字路口。相信你的直觉，果断行动。半月的光芒提醒你：有时候不完美的行动胜过完美的犹豫。","上弦月象征着克服障碍的力量。{name}在这个月相下可能会遇到一些挑战，但这正是考验你决心的时刻。直面它们，你会发现自己比想象中更加强大。"],
+'盈凸月':["盈凸月是完善和调整的阶段。{name}应该回顾最近的行动计划，看看有哪些需要微调的地方。你的努力即将迎来回报，但现在的精细调整会让最终的成果更加完美。","月亮即将圆满，你的项目和关系也在接近一个高峰期。{name}现在需要做的是耐心等待，同时确保一切都在正确的轨道上。"],
+'满月':["满月是收获和释放的时刻。对{name}来说，这个满月照亮了你内心深处的某些真相，让你看清自己真正需要的是什么。如果有什么不再服务于你成长的东西，现在是放手的最佳时机。","满月的强大能量可能让{name}的情绪比平时更加强烈。不要抗拒这些感受，让它们流过你。满月是宇宙给你的一面镜子，照出你最真实的内在状态。"],
+'亏凸月':["亏凸月代表着感恩和分享。{name}在这个阶段适合回顾最近取得的成就，向帮助过你的人表达感谢。同时，也是把你的经验和知识分享给他人的好时机。","月亮开始收敛光芒，提醒{name}也要适当收敛能量。这不是开始新项目的最佳时机，而是整理和总结既有成果的好时段。"],
+'下弦月':["下弦月带来反思和释放的能量。{name}可以利用这个时间清理生活中不再需要的东西，无论是物质的杂物还是精神的包袱。放下旧的，才能迎来新的。","下弦月象征着一个周期即将结束。{name}现在需要做的是接受变化，准备好迎接下一个新月带来的新开始。休息和恢复在这个阶段尤为重要。"],
+'残月':["残月是最适合内省和休息的月相。{name}在这几天可能会感到比平时更加疲惫或内向，这是完全正常的。给自己足够的休息时间，不要强迫自己保持高产出。","残月的安静能量是{name}进行灵性修行的最佳时机。冥想、瑜伽、大自然中的独处，都能帮助你在这个月相中得到深层的恢复和滋养。新月就要来了，保存好你的能量。"]
 }
-
-function getToday(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function getWeekId(){const d=new Date(),jan1=new Date(d.getFullYear(),0,1);return `${d.getFullYear()}-W${Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7)}`}
-function getMonthId(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
-function getQuarterId(){const d=new Date();return `${d.getFullYear()}-Q${Math.ceil((d.getMonth()+1)/3)}`}
-function getYearId(){return `${new Date().getFullYear()}`}
-
-// Fortune text templates organized by category and rating level
-// ===== 运势文案模板池（300+条，基于Planets in Transit/Llewellyn/Linda Goodman等占星典籍） =====
-const T = {
-  love: {
-    high: [
-      '感情运势旺盛，桃花运强劲，单身者有望遇到心仪之人。',
-      '爱情星光闪耀，与伴侣的默契度达到高峰。',
-      '金星的祝福带来甜蜜能量，浪漫气息弥漫周围。',
-      '情感沟通顺畅无阻，适合表达深层心意。',
-      '魅力指数飙升，身边追求者可能增多。',
-      '爱情中的信任与安全感大幅增强。',
-      '浪漫的行星相位助你修复关系中的裂痕。',
-      '单身者在社交场合可能邂逅灵魂伴侣。',
-      '金星与木星形成拱相位，爱情运达到本阶段巅峰。',
-      '感情中的坦诚和勇气将为你赢得对方的真心。',
-      '亲密关系进入甜蜜升温期，享受被爱的感觉。',
-      '你的温柔和体贴正在打动重要的人，表白成功率极高。',
-      '旧情可能复燃，但这次会以更成熟的姿态重新开始。',
-      '月亮照亮你的感情宫位，直觉引导你找到真爱。',
-      '社交圈扩大带来意想不到的浪漫缘分。',
-      '感情中的付出终于得到回报，伴侣更加珍惜你。'
-    ],
-    mid: [
-      '感情平稳发展，珍惜当下的温馨时光。',
-      '爱情路上偶有小波折，但都能化险为夷。',
-      '适合与伴侣进行深入的内心交流。',
-      '感情需要更多耐心和包容去维护。',
-      '旧友可能带来新的情感际遇。',
-      '情感上需要在独立与依赖间找到平衡。',
-      '关系中可能出现小摩擦，冷静处理即可。',
-      '单身者不必急于求成，缘分自有安排。',
-      '水星的影响让你更善于表达爱意，但也需倾听。',
-      '感情进入平稳期，适合一起做些日常的小事增进感情。',
-      '对伴侣的期望需要适当调整，没有完美的另一半。',
-      '暗恋对象可能发出模糊信号，需要你的主动确认。',
-      '已婚者适合安排一次约会之夜，重温恋爱感觉。',
-      '家人对你的感情生活可能有些看法，学会温和回应。',
-      '内心的不安全感可能影响判断，信任是最好的解药。',
-      '过去的情感经历正在教会你如何更好地爱。'
-    ],
-    low: [
-      '情感上可能遇到小挫折，保持乐观心态。',
-      '与伴侣之间容易产生误解，需多沟通。',
-      '感情中的旧问题可能浮现，正面面对是最佳策略。',
-      '避免在冲动下做出影响感情的重要决定。',
-      '情绪波动较大，注意不要将负面情绪带入关系中。',
-      '回避不了的情感课题需要勇敢面对。',
-      '金星逆行的余波尚在，旧情绪可能翻涌而来。',
-      '嫉妒心可能成为感情的绊脚石，学会放下。',
-      '单身者今天不适合盲目搭讪，安静独处更有收获。',
-      '伴侣的某些习惯可能让你格外烦躁，深呼吸。',
-      '第三者的出现可能只是你内心不安的投射。',
-      '争吵在所难免，但要注意言辞的尺度。'
-    ]
-  },
-  career: {
-    high: [
-      '事业运蒸蒸日上，工作中易获贵人相助。',
-      '木星的能量带来职业突破的机会。',
-      '思路清晰，决策精准，领导力大增。',
-      '项目推进顺利，成果将超出预期。',
-      '职场人际关系和谐，团队协作默契十足。',
-      '有望获得升职加薪或新的职业机遇。',
-      '创业者灵感迸发，商业嗅觉异常敏锐。',
-      '专业能力得到充分展现和认可。',
-      '太阳与火星的和谐相位赋予你超强行动力。',
-      '长期努力的项目即将迎来收获期，坚持到底。',
-      '面试、述职、提案等重要场合将表现出色。',
-      '跨部门合作带来意想不到的职业机遇。',
-      '你的创新想法正在被重要的人关注和赏识。',
-      '适合发起新项目或接手新的工作任务。',
-      '领导对你的信任度大幅提升，重任在肩。',
-      '水星在你的事业宫运行，沟通和谈判能力倍增。'
-    ],
-    mid: [
-      '工作按部就班，适合稳扎稳打。',
-      '事业上需要多一分耐心和细心。',
-      '可能面临一些小挑战，但都在可控范围内。',
-      '适合学习新技能，为未来积蓄力量。',
-      '职场沟通需更注意方式方法。',
-      '日常工作中可能出现意料之外的变动。',
-      '保持专注，避免分散精力在太多方向。',
-      '与同事的合作关系需要更多磨合。',
-      '土星的影响提醒你注重工作中的细节和规范。',
-      '职场中低调行事比高调表态更为有利。',
-      '例行工作中可能发现改进和优化的空间。',
-      '适合整理文档、梳理流程，做好基础工作。',
-      '同事之间可能有竞争氛围，保持自己的节奏。',
-      '工作会议可能冗长乏味，但隐含重要信息。',
-      '上司的批评可能令人不快，但确实值得反思。',
-      '事业方向暂时模糊也无妨，允许自己探索。'
-    ],
-    low: [
-      '事业上可能遭遇瓶颈，需调整策略。',
-      '工作压力较大，注意劳逸结合。',
-      '避免在职场中与人发生正面冲突。',
-      '项目推进可能受阻，保持耐心等待时机。',
-      '决策前需深思熟虑，避免仓促行事。',
-      '职场变动可能带来不安，但危中藏机。',
-      '土星的压力让工作节奏变得沉重，撑住就是胜利。',
-      '与上级的沟通可能不顺畅，选择合适的时机再谈。',
-      '合同或协议方面可能出现意外条款，仔细审阅。',
-      '同事之间的误会可能升级，主动化解比等待更好。',
-      '不宜在今天做出跳槽或转行等重大职业决定。',
-      '工作中的失误可能引发连锁反应，及时止损。'
-    ]
-  },
-  wealth: {
-    high: [
-      '财运亨通，意外之财可能降临。',
-      '投资眼光精准，财富有望增长。',
-      '木星带来的好运有助于改善经济状况。',
-      '正财收入稳定增长，副业也有斩获。',
-      '财务规划的成果开始显现。',
-      '贵人带来的商机值得把握。',
-      '理财意识增强，财富管理更上层楼。',
-      '金钱方面的困扰有望得到解决。',
-      '第二宫的木星过境带来丰厚的物质回报。',
-      '长期投资开始产生可观的收益。',
-      '可能收到奖金、分红或意外馈赠。',
-      '金牛座的能量帮助你在财务上做出明智决策。',
-      '生意谈判顺利，成交概率大增。',
-      '适合审视和调整资产配置，优化理财组合。',
-      '他人的还款或拖欠款项可能在此时到账。',
-      '财运与人脉正相关，社交场合暗含赚钱机会。'
-    ],
-    mid: [
-      '财运平稳，量入为出是明智之举。',
-      '适合制定长期理财计划。',
-      '消费时保持理性，避免冲动购物。',
-      '财务上可能有小的波动，但无伤大雅。',
-      '朋友的投资建议可作参考，但需自行判断。',
-      '开源节流双管齐下，财务状况稳步改善。',
-      '副业收入可能不如预期，需要耐心培育。',
-      '理财不宜过于冒险，稳健为主。',
-      '日常消费中可能发现节省的新方法。',
-      '账单和税务事项需要及时处理，避免滞纳。',
-      '适合比价和研究后再做大额购买决定。',
-      '定投和储蓄是当前最稳妥的理财方式。',
-      '小额消费叠加可能超出预算，注意记账。',
-      '借出去的钱可能需要委婉催促才能回收。',
-      '保险和保障类支出值得审视和优化。',
-      '避免在情绪激动时做出财务决定。'
-    ],
-    low: [
-      '财务上需格外谨慎，避免大额支出。',
-      '投资需保守策略，不宜冒进。',
-      '意外开支可能增多，提前做好预算。',
-      '借贷问题需妥善处理，避免债务扩大。',
-      '财运低迷期，守住钱袋比赚钱更重要。',
-      '不适合签署重大财务合同或做投资决策。',
-      '冲动消费的诱惑增大，购物前先冷静24小时。',
-      '朋友借钱需三思，避免因财务伤了情谊。',
-      '维修、医疗等意外支出可能打乱财务计划。',
-      '投机行为风险极大，远离高杠杆操作。',
-      '海王星的迷雾可能让你对财务状况判断失误。',
-      '不要轻信"稳赚不赔"的投资建议。'
-    ]
-  },
-  health: {
-    high: [
-      '身体状态极佳，精力充沛。',
-      '适合开始新的健身计划或运动项目。',
-      '心理状态积极向上，内心平和。',
-      '睡眠质量好，免疫力增强。',
-      '身心舒畅，是调理身体的好时机。',
-      '正能量满满，带动周围人的健康氛围。',
-      '火星赋予你旺盛的体力，适合高强度锻炼。',
-      '新陈代谢处于高峰期，减脂效果更佳。',
-      '情绪稳定，心态积极，一切身心指标良好。',
-      '适合户外活动，阳光和新鲜空气是最好的补药。',
-      '过去的小毛病有望在此阶段自然缓解。',
-      '精神饱满，思维敏捷，创造力也随之提升。'
-    ],
-    mid: [
-      '健康状况总体良好，注意规律作息。',
-      '适度运动有助于缓解工作压力。',
-      '饮食上注意营养均衡，少油少盐。',
-      '情绪管理需要关注，避免过度焦虑。',
-      '久坐人群注意颈椎和腰椎健康。',
-      '换季时节注意防寒保暖。',
-      '肠胃功能需要关注，饮食宜清淡温和。',
-      '眼睛疲劳信号增多，减少屏幕使用时间。',
-      '水象能量提醒你多补充水分，保持水润。',
-      '午间小憩对恢复精力有意想不到的效果。',
-      '过敏体质者需注意环境中的致敏因素。',
-      '牙齿和口腔健康值得关注，定期检查。',
-      '瑜伽和冥想比激烈运动更适合当前状态。',
-      '社交疲劳可能累积，给自己安静独处的时间。',
-      '维生素和微量元素的补充可以考虑安排起来。',
-      '作息不规律的后果开始显现，调整生物钟。'
-    ],
-    low: [
-      '身体可能出现疲劳信号，需要充分休息。',
-      '免疫力有所下降，注意预防感冒。',
-      '情绪容易低落，多做让自己开心的事。',
-      '睡眠质量可能不佳，睡前避免看手机。',
-      '注意饮食卫生，肠胃可能比较敏感。',
-      '压力过大时记得寻求帮助和倾诉。',
-      '头痛或偏头痛可能困扰你，注意休息和水分。',
-      '旧伤或慢性问题可能在此时加重，及时就医。',
-      '情绪化饮食可能导致肠胃不适，觉察自己的进食习惯。',
-      '运动时注意安全，避免过度拉伸或扭伤。',
-      '心理能量偏低，减少不必要的社交消耗。',
-      '海王星的影响可能带来莫名的倦怠感，这是暂时的。'
-    ]
-  },
-  overall: {
-    high: [
-      '运势高涨，宇宙的能量助你乘风破浪。行星排列对你有利，把握住每一个机会。',
-      '星象给予你强大的支持，无论做什么都能事半功倍。',
-      '幸运之星眷顾，一切都在向好的方向发展。自信地迈出每一步。',
-      '火星与木星的和谐相位为你注入满满的正能量和好运。',
-      '太阳照亮你的本命宫，自我表达和个人魅力达到高峰。今天是属于你的舞台。',
-      '多颗行星形成大三角格局，运势全面开花，难得的黄金时段。',
-      '守护星与太阳形成和谐相位，你的意志力和行动力空前强大。',
-      '宇宙仿佛在为你铺路，意想不到的好事可能接连发生。',
-      '正能量磁场强大，你会发现身边的人都格外友善和配合。',
-      '这是播种未来的绝佳时机，你今天的每一个决定都将开花结果。'
-    ],
-    mid: [
-      '运势平稳，适合脚踏实地处理日常事务。不必追求太多，做好眼前的事。',
-      '能量适中，平稳中暗藏小惊喜。保持开放的心态。',
-      '星象提示适合反思与调整，为接下来的好运做准备。',
-      '日常节奏平稳，把精力集中在最重要的事情上。',
-      '土星提醒你注意自律和规划，踏实前行比冒进更智慧。',
-      '水星的能量让你的思维格外活跃，适合学习和沟通。',
-      '中等强度的宇宙能量流经你的星盘，适合推进而非冒险。',
-      '一切都在既定轨道上运行，不必过于焦虑也不必过于懈怠。',
-      '生活中的小确幸值得你停下来细细品味。',
-      '星象显示这是一个过渡期，为下一个高峰蓄力。'
-    ],
-    low: [
-      '运势略有低迷，保持耐心和平常心。困难只是暂时的。',
-      '星象提示需要更多的谨慎和耐心。避免重大决定。',
-      '能量不足的一天，不妨放慢脚步，给自己充电的时间。',
-      '挑战可能出现在意想不到的地方，但你有足够的智慧应对。',
-      '土星与太阳形成刑相位，责任和压力可能增大，但这是成长的必经之路。',
-      '天王星带来的变动可能打乱计划，灵活应对比固守更好。',
-      '水星逆行的影响仍在，沟通和出行需要额外注意。',
-      '不必强求所有事情都完美，允许自己有低潮的时候。',
-      '这段看似困难的时期，正在塑造一个更强大的你。',
-      '宇宙的考验都是带着礼物来的，耐心等待云开雾散。'
-    ]
-  }
 };
 
-// ===== 周/月/季/年专属运势模板 =====
-const TP = {
-  weekly: {
-    high: [
-      '本周星象极为有利，多颗行星在你的星盘中形成积极相位。把握周中的能量高峰期，大胆推进重要事项。周末适合社交和放松，好运会在人群中找到你。',
-      '守护星本周运行顺畅，为你的计划保驾护航。工作和生活都将迎来令人欣喜的进展，尤其是周三至周五期间，行动力和创造力双双在线。',
-      '本周新月的能量为你开启新的篇章。适合启动新项目、认识新朋友、尝试新事物。宇宙的支持力度强劲，勇敢迈出第一步。',
-      '木星与金星形成美好相位，本周的人际关系和财运都将有所提升。贵人运旺，关键时刻总有人为你指路。'
-    ],
-    mid: [
-      '本周运势平稳过渡，上半周适合处理遗留事务，下半周可以展望新方向。水星的影响让沟通变得尤为重要，清晰表达你的想法。',
-      '星象显示本周需要在忙碌与休息之间找到平衡。周中可能有一些小插曲，但整体在可控范围内。周末给自己充电的时间。',
-      '本周的能量适合梳理和整合，而非大刀阔斧的改变。回顾过去一周的得失，为下周做更好的规划。',
-      '火星的能量在本周中段达到高峰，适合处理需要勇气和决断力的事务。但也要注意控制脾气。'
-    ],
-    low: [
-      '本周星象略显紧张，几颗行星形成挑战性相位。保持冷静和耐心是通关密钥。避免在周初做重大决定，周末情况会好转。',
-      '水星逆行影响本周沟通和出行，重要文件和行程需要反复确认。放慢脚步反而能避免更多麻烦。',
-      '本周可能面临一些需要调整计划的情况，灵活应变比固执己见更明智。这段经历会让你在下周更加从容。',
-      '土星的压力在本周较为明显，工作和责任可能让人喘不过气。记住，适当示弱和求助也是一种力量。'
-    ]
-  },
-  monthly: {
-    high: [
-      '本月星象大利，木星在你的有利宫位运行，整体运势呈上升趋势。上旬播种、中旬耕耘、下旬收获，节奏把握好将硕果累累。关注月中的满月，它可能为你揭示重要的人生答案。',
-      '守护星本月状态极佳，你的个人魅力和影响力达到阶段高点。无论是职场晋升还是感情突破，本月都有极大的可能性。月底的新月是许下心愿的绝佳时机。',
-      '金星本月在你的感情宫位运行，爱情和人际关系全面开花。同时木星带来的扩展能量也惠及事业领域。这是一个值得全力以赴的月份。',
-      '多颗行星本月呈积极排列，生活中的各个领域都能感受到顺遂的能量。特别是月中的星象配置，可能带来意料之外的好消息。'
-    ],
-    mid: [
-      '本月运势呈现先抑后扬的走势。上旬可能需要处理一些琐碎事务，但中旬开始能量逐渐上升。月底的行星换座将为下个月带来新的机遇和挑战。',
-      '水星本月的运行提醒你注重细节和沟通。工作中的小错误可能在本月被放大，细心是最好的护身符。感情上适合坦诚交流，不要猜测对方的心意。',
-      '本月的满月发生在你的关系宫位，人际关系和合作事项将成为焦点。可能需要做出一些取舍和平衡的决定。信任你的直觉。',
-      '火星本月的影响带来行动力也带来躁动。将这股能量用在健身和工作上，避免浪费在争执和冲突上。月中后半段能量趋于平和。'
-    ],
-    low: [
-      '本月星象提示需要谨慎行事。几颗外行星形成紧张相位，大环境可能不太平静。好消息是，下旬开始云开雾散，保持耐心等待转机。',
-      '本月可能是反思和调整的时期。过去几个月积累的问题可能在此时集中爆发，正面应对比逃避更有效。月底的新月将帮助你重新出发。',
-      '土星的压力在本月较为集中，工作和生活中的责任感加重。但请记住，土星也是最伟大的老师，这些经历正在让你变得更加成熟和强大。',
-      '本月的能量适合内观和修整，不适合大步跨越。利用这段时间重新审视你的目标和方向，下个月你将以更清晰的姿态重新出发。'
-    ]
-  },
-  quarterly: {
-    high: [
-      '本季度木星在你的关键宫位运行，这是近年来最值得期待的时段之一。事业上可能迎来重大突破，感情中也有深层的连接和成长。第二个月是能量最强的时期，做好准备迎接惊喜。财务状况整体向好，适度的冒险可能带来超额回报。',
-      '守护星本季度运行在有利位置，你的整体运势处于上升通道。第一个月适合制定计划、第二个月全力执行、第三个月收获成果。人际关系和贵人运同样走高，关键节点会有人为你铺路。',
-      '本季度多颗行星形成大十字和大三角的积极格局，虽然挑战与机遇并存，但总体趋势对你非常有利。把握住本季中旬的黄金期，做出改变人生轨迹的重要决定。'
-    ],
-    mid: [
-      '本季度运势呈现波浪式前进，有高有低但总体平稳。第一个月可能需要解决遗留问题，第二个月进入平稳上升期，第三个月适合规划下一步。土星的影响提醒你扎实基础比追求速度更重要。',
-      '水星和金星本季度的运行让沟通和人际成为重点。工作中的合作项目需要更多的协调和配合，感情中的坦诚对话将带来关系的升级。财务方面宜保守，大投资请推迟到下季度。',
-      '本季度是积累和准备的时期。虽然可能看不到立竿见影的成果，但你现在做的每一件事都在为未来铺路。保持耐心和专注，你的坚持会在下一季度得到回报。'
-    ],
-    low: [
-      '本季度外行星的紧张相位可能带来一些大环境的压力。好消息是，这些压力正在推动你做出早该做出的改变。第一个月最为艰难，之后逐渐好转。关注内心的声音，它会告诉你正确的方向。',
-      '土星与冥王星的相位在本季度施加转化性的压力。你可能需要放弃一些已经不再服务于你的事物，为新生腾出空间。这是痛苦但必要的过程。第三个月会开始感受到轻松和释然。',
-      '本季度适合蛰伏和蓄力，不适合激进扩张。利用这段时间深耕内功、学习新技能、修复重要关系。低调的力量往往超出想象，下一个季度你将以全新姿态回归。'
-    ]
-  },
-  yearly: {
-    high: [
-      '2026年对你而言是充满机遇和成长的年份。木星在上半年为你带来扩展和好运的能量，下半年则是巩固成果的时期。年中的日月食可能标志着生命中的重要转折点——职业突破、关系深化或自我认知的飞跃。守护星全年运行良好，你的个人力量和魅力将持续在线。财务方面，今年有望实现质的飞跃，但记得合理配置资产。感情上，深层的灵魂连接比表面的激情更值得追求。整体而言，2026年是你播种理想、收获奇迹的一年。',
-      '2026年的星象格局对你极为有利。土星完成了对你的考验周期，木星开始带来久违的扩展能量。上半年适合大胆行动和开拓新领域，下半年则需稳固基础、消化成果。两次日食分别照亮你的事业和感情领域，带来戏剧性但积极的转变。今年最重要的功课是：学会在成功中保持谦逊，在机遇中保持清醒。'
-    ],
-    mid: [
-      '2026年是一个过渡与转型的年份。上半年可能延续去年的主题，需要处理遗留事务和做出关键决定。下半年随着木星换座，新的能量将注入你的生活。日月食在年中和年末带来两个重要的转折窗口期。事业上稳中有进，感情上需要更多耐心和沟通。财务方面建议保持稳健，大投资推迟到下半年更为妥当。整体来看，2026年是蓄势待发的一年，你在这一年做的准备将在2027年开花结果。',
-      '2026年星象混合，机遇与挑战并存。天王星的换座带来生活某个领域的意外变动，而土星的影响则要求你承担更多的责任。好消息是，金星全年对你相对友好，人际关系和社交生活将成为你的能量来源。今年的关键词是"平衡"——在进取与保守之间、在理想与现实之间、在付出与接受之间找到你的节奏。'
-    ],
-    low: [
-      '2026年可能是你近年来最需要韧性和智慧的一年。土星进入新的宫位带来结构性的压力和改变，而冥王星的持续影响则推动深层的转化。上半年的挑战集中在事业和方向感上，下半年可能转向关系和内在成长。但请记住，宇宙不会给你承受不了的考验。这一年你经历的每一次低谷都在磨练你的意志，到年底你会发现自己已经脱胎换骨。建议全年保持健康的生活方式，它是你应对挑战的最大资本。',
-      '2026年的基调是反思与重建。过去几年积累的问题可能在上半年集中显现，要求你做出根本性的调整。这不是坏事——真正的成长总是从正视问题开始的。下半年随着行星能量的转换，你会逐渐找到新的方向和动力。财务上全年宜保守，感情上需要更多的真诚和勇气。今年最重要的投资是投资自己。'
-    ]
-  }
-};
+// Quarter/year theme pools
+const quarterThemes=['事业突破与个人成长','感情深化与灵魂探索','财富积累与价值实现','内在转化与外在蜕变','社交拓展与人脉升级','学习进修与视野开阔','健康重建与生活优化','创业机遇与风险管理'];
+const yearThemes=['深层蜕变与重生','稳步上升与积累','灵魂觉醒与方向重置','丰收与分享','突破瓶颈与自我超越','脚踏实地与厚积薄发'];
 
-const COLORS_POOL = ['红色','橙色','金色','绿色','蓝色','紫色','粉色','银色','白色','青色','珊瑚色','薄荷绿'];
-const DIRECTIONS = ['正东','东南','正南','西南','正西','西北','正北','东北'];
+// ============================================================
+// FORTUNE GENERATION ENGINE
+// ============================================================
+function pick(arr,rng){return arr[Math.floor(rng()*arr.length)]}
+function fillTemplate(tpl,sign){
+return tpl.replace(/\{ruler\}/g,sign.ruler).replace(/\{name\}/g,sign.name)
+.replace(/\{area\}/g,pick(['事业','感情','健康','财富','人际关系','个人成长'],mulberry32(hashStr(sign.id+dateKey))))
+.replace(/\{theme\}/g,pick(quarterThemes,mulberry32(hashStr(sign.id+dateKey+'theme'))));
+}
+function genStars(rng,base){
+const v=rng();
+if(base==='high')return v>0.3?5:4;
+if(base==='low')return v>0.5?2:v>0.2?2:1;
+return v>0.5?4:3;
+}
+function starStr(n){return '★'.repeat(n)+'☆'.repeat(5-n)}
+function scoreFromStars(s){return s*20+(s>3?Math.floor(Math.random()*5):0)}
 
-// Generate fortune for a sign and period
-function generateFortune(signIdx, period) {
-  let periodKey;
-  switch(period) {
-    case 'daily': periodKey = getToday(); break;
-    case 'weekly': periodKey = getWeekId(); break;
-    case 'monthly': periodKey = getMonthId(); break;
-    case 'quarterly': periodKey = getQuarterId(); break;
-    case 'yearly': periodKey = getYearId(); break;
-  }
+function genFortune(sign,period){
+const rng=seededRng(dateKey,sign.id,period);
+// Determine overall level
+const overallVal=rng();
+let level=overallVal>0.6?'high':overallVal>0.25?'mid':'low';
+const overallStars=genStars(seededRng(dateKey,sign.id,period+'os'),level);
 
-  const seed = dateSeed(periodKey, signIdx, 'fortune2026');
-  const rng = mulberry32(seed);
+// Pick templates based on period
+let overallPool;
+if(period==='daily'){
+overallPool=level==='high'?T.overallHigh:level==='low'?T.overallLow:T.overallMid;
+}else if(period==='weekly'){
+overallPool=level==='high'?T.weeklyOverallHigh:level==='low'?T.weeklyOverallLow:T.weeklyOverallMid;
+}else if(period==='monthly'){
+overallPool=level==='high'?T.monthlyOverallHigh:level==='low'?T.monthlyOverallLow:T.monthlyOverallMid;
+}else if(period==='quarterly'){
+overallPool=T.quarterlyOverall;
+}else{
+overallPool=T.yearlyOverall;
+}
+const overallText=fillTemplate(pick(overallPool,rng),sign);
 
-  // Generate ratings (1-5)
-  const pick = (arr) => arr[Math.floor(rng() * arr.length)];
-  const rate = () => {
-    const r = rng();
-    if(r < 0.15) return 2;
-    if(r < 0.35) return 3;
-    if(r < 0.65) return 4;
-    if(r < 0.85) return 5;
-    return 3;
-  };
-
-  const overallRate = rate();
-  const loveRate = rate();
-  const careerRate = rate();
-  const wealthRate = rate();
-  const healthRate = rate();
-
-  const level = (r) => r >= 4 ? 'high' : r >= 3 ? 'mid' : 'low';
-
-  // Use period-specific templates for weekly/monthly/quarterly/yearly
-  let periodText = '';
-  if (period !== 'daily' && TP[period]) {
-    periodText = pick(TP[period][level(overallRate)]);
-  }
-
-  return {
-    overall: overallRate,
-    overallText: period === 'daily' ? pick(T.overall[level(overallRate)]) : periodText,
-    love: loveRate,
-    loveText: pick(T.love[level(loveRate)]),
-    career: careerRate,
-    careerText: pick(T.career[level(careerRate)]),
-    wealth: wealthRate,
-    wealthText: pick(T.wealth[level(wealthRate)]),
-    health: healthRate,
-    healthText: pick(T.health[level(healthRate)]),
-    luckyColor: pick(COLORS_POOL),
-    luckyDir: pick(DIRECTIONS),
-    luckyNum: Math.floor(rng() * 99) + 1,
-    luckyTime: `${Math.floor(rng()*12)+8}:00-${Math.floor(rng()*12)+8+2}:00`,
-    period: period
-  };
+// Dimensions
+const dims=['love','career','wealth','health'];
+const dimNames=['爱情运势','事业运势','财富运势','健康运势'];
+const dimIcons=['💕','💼','💰','🌿'];
+const dimResults=[];
+for(let i=0;i<4;i++){
+const dRng=seededRng(dateKey,sign.id,period+dims[i]);
+const dVal=dRng();
+const dLevel=dVal>0.55?'high':dVal>0.2?'mid':'low';
+const dStars=genStars(seededRng(dateKey,sign.id,period+dims[i]+'s'),dLevel);
+let pool;
+if(dims[i]==='love') pool=dLevel==='high'?T.loveHigh:dLevel==='low'?T.loveLow:T.loveMid;
+else if(dims[i]==='career') pool=dLevel==='high'?T.careerHigh:dLevel==='low'?T.careerLow:T.careerMid;
+else if(dims[i]==='wealth') pool=dLevel==='high'?T.wealthHigh:dLevel==='low'?T.wealthLow:T.wealthMid;
+else pool=dLevel==='high'?T.healthHigh:dLevel==='low'?T.healthLow:T.healthMid;
+const text=fillTemplate(pick(pool,dRng),sign);
+const tip=pick(T.tips[dims[i]],dRng);
+dimResults.push({name:dimNames[i],icon:dimIcons[i],stars:dStars,text,tip});
 }
 
-function starsHTML(rating) {
-  return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+// Lucky attributes
+const colors=['红色','橙色','金色','绿色','蓝色','紫色','白色','银色','粉色','黄色','深蓝色','青色'];
+const dirs=['东','南','西','北','东南','东北','西南','西北'];
+const times=['早晨6-8点','上午9-11点','中午12-14点','下午15-17点','傍晚17-19点','晚上20-22点'];
+const luckyColor=pick(colors,seededRng(dateKey,sign.id,period+'lc'));
+const luckyNum=Math.floor(seededRng(dateKey,sign.id,period+'ln')()*89)+1;
+const luckyDir=pick(dirs,seededRng(dateKey,sign.id,period+'ld'));
+const luckyTime=pick(times,seededRng(dateKey,sign.id,period+'lt'));
+
+// Power days & caution days
+let powerDays=[], cautionDays=[];
+if(period==='weekly'||period==='monthly'){
+const dRng2=seededRng(dateKey,sign.id,period+'days');
+const baseDate=new Date(NOW);
+const range=period==='weekly'?7:30;
+for(let i=0;i<3;i++){
+const pd=Math.floor(dRng2()*range)+1;
+const pDate=new Date(baseDate);pDate.setDate(pDate.getDate()+pd);
+powerDays.push({
+date:`${pDate.getMonth()+1}/${pDate.getDate()}`,
+desc:fillTemplate(pick(T.powerDayDescs,dRng2),sign)
+});
+const cd=Math.floor(dRng2()*range)+1;
+const cDate=new Date(baseDate);cDate.setDate(cDate.getDate()+cd);
+cautionDays.push({
+date:`${cDate.getMonth()+1}/${cDate.getDate()}`,
+desc:fillTemplate(pick(T.cautionDayDescs,dRng2),sign)
+});
+}
 }
 
-// ========== UI RENDERING ==========
-let currentSign = null;
-let currentPeriod = 'daily';
-let isPaid = false; // Will be controlled by key verification
-
-function init() {
-  // Stars background
-  const sc = document.getElementById('starsContainer');
-  for(let i=0;i<60;i++){
-    const s=document.createElement('div');s.className='star';
-    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
-    s.style.animationDuration=(2+Math.random()*4)+'s';
-    s.style.animationDelay=Math.random()*5+'s';
-    s.style.width=s.style.height=(1+Math.random()*2)+'px';
-    sc.appendChild(s);
-  }
-
-  // Date bar
-  const now = new Date();
-  const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
-  document.getElementById('dateBar').textContent =
-    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${weekDays[now.getDay()]}`;
-
-  // Sign grid
-  const grid = document.getElementById('signGrid');
-  SIGNS.forEach((s,i) => {
-    const btn = document.createElement('div');
-    btn.className = 'sign-btn';
-    btn.innerHTML = `<span class="emoji">${s.emoji}</span><span class="name">${s.name}</span><span class="date">${s.dates}</span>`;
-    btn.onclick = () => selectSign(i);
-    grid.appendChild(btn);
-  });
-
-  // Rankings
-  renderRankings();
-
-  // Tabs
-  document.querySelectorAll('.tab').forEach(t => {
-    t.onclick = () => {
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      currentPeriod = t.dataset.period;
-      if(currentSign !== null) renderFortune();
-    };
-  });
-
-  // Check if there's a key cookie
-  isPaid = document.cookie.includes('gx_horoscope=');
+return {overallStars,overallText,dims:dimResults,luckyColor,luckyNum,luckyDir,luckyTime,powerDays,cautionDays};
 }
 
-function selectSign(idx) {
-  currentSign = idx;
-  const s = SIGNS[idx];
-
-  // Highlight button
-  document.querySelectorAll('.sign-btn').forEach((b,i)=>{
-    b.classList.toggle('active', i===idx);
-  });
-
-  // Sign info card
-  const info = document.getElementById('signInfo');
-  info.className = `sign-info show element-${s.element} fade-in`;
-  info.innerHTML = `
-    <div class="top">
-      <div class="big-emoji">${s.emoji}</div>
-      <div class="meta">
-        <h2>${s.symbol} ${s.name}</h2>
-        <div class="tags">
-          <span class="tag el">${s.elName} · ${s.quality}</span>
-          <span class="tag">守护星：${s.ruler}</span>
-          <span class="tag">关键词：${s.keyword}</span>
-        </div>
-      </div>
-    </div>
-    <div class="lucky-row">
-      <div class="lucky-item"><div class="label">幸运日</div><div class="val">${s.day}</div></div>
-      <div class="lucky-item"><div class="label">幸运数</div><div class="val">${s.lucky.join(', ')}</div></div>
-      <div class="lucky-item"><div class="label">幸运色</div><div class="val">${s.color}</div></div>
-      <div class="lucky-item"><div class="label">守护石</div><div class="val">${s.gem}</div></div>
-    </div>
-  `;
-
-  // Personality
-  const ps = document.getElementById('personalitySection');
-  ps.classList.remove('hidden');
-  document.getElementById('personalityContent').innerHTML = `
-    <p>${s.desc}</p>
-    <div class="traits">${s.traits.map(t=>`<span class="trait">${t}</span>`).join('')}</div>
-    <div class="compat">
-      <h4>星座配对</h4>
-      <div class="compat-row">
-        ${s.goodMatch.map(m=>`<span class="compat-tag good">💚 ${SIGNS.find(x=>x.id===m).name}</span>`).join('')}
-        ${s.badMatch.map(m=>`<span class="compat-tag bad">💔 ${SIGNS.find(x=>x.id===m).name}</span>`).join('')}
-      </div>
-    </div>
-  `;
-
-  renderFortune();
+// ============================================================
+// RANKING GENERATION
+// ============================================================
+function genRankings(){
+const rankings=[];
+const summariesHigh=["桃花朵朵开，魅力挡不住","贵人运爆棚，事半功倍","财神眷顾，收获满满","灵感泉涌，才华横溢","好运连连，万事亨通","星光璀璨，闪耀全场"];
+const summariesMid=["稳扎稳打，小有收获","保持节奏，静待花开","沟通顺畅，合作愉快","心态平和，稳步前行","整理思绪，蓄势待发","以退为进，智慧之选"];
+const summariesLow=["韬光养晦，等待时机","注意休息，养精蓄锐","谨言慎行，避免冲突","低调行事，减少风险"];
+for(let s of SIGNS){
+const rng=seededRng(dateKey,s.id,'ranking');
+const score=Math.floor(rng()*40)+60;
+const stars=score>=90?5:score>=80?4:score>=70?3:score>=60?2:1;
+const pool=score>=85?summariesHigh:score>=65?summariesMid:summariesLow;
+rankings.push({sign:s,score,stars,summary:pick(pool,rng)});
+}
+rankings.sort((a,b)=>b.score-a.score);
+return rankings;
 }
 
-function renderFortune() {
-  if(currentSign === null) return;
-  const f = generateFortune(currentSign, currentPeriod);
-  const area = document.getElementById('fortuneArea');
-  const needPay = (currentPeriod === 'quarterly' || currentPeriod === 'yearly') && !isPaid;
+// ============================================================
+// UI RENDERING
+// ============================================================
+let currentSign=null;
+let currentPeriod='daily';
 
-  // Free content: overall rating + summary
-  let html = `
-    <div class="rating-section fade-in">
-      <div class="overall">
-        <div class="score">${starsHTML(f.overall)}</div>
-        <div class="label">${getPeriodLabel()} 综合运势</div>
-        <div class="desc">${f.overallText}</div>
-      </div>
-      <div class="lucky-row" style="margin-top:10px">
-        <div class="lucky-item"><div class="label">幸运色</div><div class="val">${f.luckyColor}</div></div>
-        <div class="lucky-item"><div class="label">幸运数字</div><div class="val">${f.luckyNum}</div></div>
-        <div class="lucky-item"><div class="label">吉利方位</div><div class="val">${f.luckyDir}</div></div>
-      </div>
-    </div>
-  `;
-
-  // Detail ratings (free for daily/weekly/monthly, paid for quarterly/yearly)
-  if(needPay) {
-    html += `
-      <div class="paywall">
-        <div class="paywall-content">
-          <div class="sub-ratings">
-            <div class="sub-rate"><div class="cat">💕 爱情运势</div><div class="stars">${starsHTML(f.love)}</div><div class="txt">${f.loveText}</div></div>
-            <div class="sub-rate"><div class="cat">💼 事业运势</div><div class="stars">${starsHTML(f.career)}</div><div class="txt">${f.careerText}</div></div>
-            <div class="sub-rate"><div class="cat">💰 财富运势</div><div class="stars">${starsHTML(f.wealth)}</div><div class="txt">${f.wealthText}</div></div>
-            <div class="sub-rate"><div class="cat">💚 健康运势</div><div class="stars">${starsHTML(f.health)}</div><div class="txt">${f.healthText}</div></div>
-          </div>
-        </div>
-        <div class="paywall-overlay">
-          <div class="lock-icon">🔮</div>
-          <div class="lock-text">${getPeriodLabel()}详细运势需要解锁<br>包含爱情·事业·财运·健康四维深度解读</div>
-          <button class="unlock-btn" onclick="goUnlock()">解锁完整运势 ¥9.99</button>
-          <div class="price-tag">一次购买 · 永久查看所有时段运势</div>
-        </div>
-      </div>
-    `;
-  } else {
-    html += `
-      <div class="sub-ratings fade-in">
-        <div class="sub-rate"><div class="cat">💕 爱情运势</div><div class="stars">${starsHTML(f.love)}</div><div class="txt">${f.loveText}</div></div>
-        <div class="sub-rate"><div class="cat">💼 事业运势</div><div class="stars">${starsHTML(f.career)}</div><div class="txt">${f.careerText}</div></div>
-        <div class="sub-rate"><div class="cat">💰 财富运势</div><div class="stars">${starsHTML(f.wealth)}</div><div class="txt">${f.wealthText}</div></div>
-        <div class="sub-rate"><div class="cat">💚 健康运势</div><div class="stars">${starsHTML(f.health)}</div><div class="txt">${f.healthText}</div></div>
-      </div>
-    `;
-  }
-
-  area.innerHTML = html;
+function renderRankings(){
+const rankings=genRankings();
+const list=document.getElementById('rankingList');
+let html='';
+rankings.forEach((r,i)=>{
+const cls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+html+=`<div class="rank-item ${cls}" onclick="selectSign('${r.sign.id}')">
+<div class="rank-num">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</div>
+<div class="rank-emoji">${r.sign.emoji}</div>
+<div class="rank-info">
+<span class="rank-name">${r.sign.name}</span>
+<span class="rank-stars">${starStr(r.stars)}</span>
+<div class="rank-summary">${r.summary}</div>
+</div>
+<div class="rank-score">${r.score}</div>
+</div>`;
+});
+list.innerHTML=html;
 }
 
-function getPeriodLabel() {
-  const labels = {daily:'今日',weekly:'本周',monthly:'本月',quarterly:'本季度',yearly:'2026年度'};
-  return labels[currentPeriod] || '今日';
+function renderGrid(){
+const grid=document.getElementById('zodiacGrid');
+let html='';
+for(let s of SIGNS){
+html+=`<div class="zodiac-btn" id="zb-${s.id}" onclick="selectSign('${s.id}')">
+<div class="emoji">${s.emoji}</div>
+<div class="name">${s.name}</div>
+<div class="dates">${s.dates}</div>
+</div>`;
+}
+grid.innerHTML=html;
 }
 
-function renderRankings() {
-  const list = document.getElementById('rankList');
-  // Generate today's rankings
-  const today = getToday();
-  const rankings = SIGNS.map((s,i) => {
-    const f = generateFortune(i, 'daily');
-    return {idx:i, score: f.overall + f.love*0.2 + f.career*0.2 + f.wealth*0.2 + f.health*0.2, rate:f.overall};
-  }).sort((a,b) => b.score - a.score);
+function selectSign(id){
+currentSign=SIGN_MAP[id];
+// Update grid active state
+document.querySelectorAll('.zodiac-btn').forEach(b=>b.classList.remove('active'));
+const btn=document.getElementById('zb-'+id);if(btn)btn.classList.add('active');
 
-  // Show top 3
-  list.innerHTML = rankings.slice(0,3).map((r,pos) => `
-    <div class="rank-item">
-      <div class="pos">${pos+1}</div>
-      <span class="emoji" style="font-size:1.2em">${SIGNS[r.idx].emoji}</span>
-      <span class="sign-name">${SIGNS[r.idx].name}</span>
-      <span class="rank-stars">${starsHTML(r.rate)}</span>
-    </div>
-  `).join('');
+renderSignDetail();
+renderFortuneTabs();
+renderFortune();
+
+const detail=document.getElementById('signDetail');
+detail.classList.add('visible');
+detail.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function goUnlock() {
-  // Redirect to key entry/payment page
-  window.top.location.href = '/site/horoscope';
+function renderSignDetail(){
+const s=currentSign;
+const elColors={fire:'fire',earth:'earth',air:'air',water:'water'};
+const elBadge=elColors[s.element]||'fire';
+
+// Profile card
+document.getElementById('profileCard').innerHTML=`
+<div class="profile-header">
+<div class="profile-emoji">${s.emoji}</div>
+<div class="profile-meta">
+<h2>${s.name}</h2>
+<div class="symbol">${s.symbol} ${s.dates} &middot; ${s.phrase}</div>
+<div style="margin-top:6px">
+<span class="badge badge-${elBadge}">${s.elName}</span>
+<span class="badge" style="background:rgba(212,175,55,0.1);border:1px solid var(--border);color:var(--gold-light)">${s.quality}</span>
+</div>
+</div>
+</div>
+<div class="attr-grid">
+<div class="attr-item"><div class="attr-label">守护星</div><div class="attr-value">${s.ruler} (${s.rulerEn})</div></div>
+<div class="attr-item"><div class="attr-label">关键词</div><div class="attr-value">${s.keyword}</div></div>
+<div class="attr-item"><div class="attr-label">幸运宝石</div><div class="attr-value">${s.gem}</div></div>
+<div class="attr-item"><div class="attr-label">幸运颜色</div><div class="attr-value">${s.color}</div></div>
+<div class="attr-item"><div class="attr-label">幸运数字</div><div class="attr-value">${s.luckyNums.join('、')}</div></div>
+<div class="attr-item"><div class="attr-label">幸运日</div><div class="attr-value">${s.luckyDay}</div></div>
+<div class="attr-item"><div class="attr-label">幸运花</div><div class="attr-value">${s.flower}</div></div>
+<div class="attr-item"><div class="attr-label">守护金属</div><div class="attr-value">${s.metal}</div></div>
+<div class="attr-item"><div class="attr-label">守护身体</div><div class="attr-value">${s.bodyPart}</div></div>
+<div class="attr-item"><div class="attr-label">守护星描述</div><div class="attr-value" style="font-size:0.82em">${s.rulerDesc}</div></div>
+</div>
+<div class="trait-tags">${s.traits.map(t=>`<span class="trait-tag">${t}</span>`).join('')}</div>
+`;
+
+// Character deep dive
+const paras=s.strengths.split('\n\n');
+const lovePara=s.loveStyle.split('\n\n');
+const careerPara=s.careerMoney.split('\n\n');
+document.getElementById('characterCard').innerHTML=`
+<div class="content-block">
+<h3>🌟 性格深度解析</h3>
+${paras.map(p=>`<p>${p}</p>`).join('')}
+</div>
+<div class="divider-subtle"></div>
+<div class="content-block">
+<h3>💕 爱情与人际风格</h3>
+<p>${lovePara[0]}</p>
+<div class="paywall-wrap" style="margin-top:8px">
+<div class="paywall-content">
+${lovePara.slice(1).map(p=>`<p>${p}</p>`).join('')}
+<div class="content-block" style="margin-top:12px">
+<h3>💼 事业与金钱观</h3>
+${careerPara.map(p=>`<p>${p}</p>`).join('')}
+</div>
+<div class="content-block">
+<h3>🌱 成长课题</h3>
+<p>${s.growthChallenge}</p>
+</div>
+</div>
+<div class="paywall-overlay">
+<div class="paywall-icon">🔮</div>
+<div class="paywall-text">解锁完整性格深度解析</div>
+<div class="paywall-sub">爱情风格 · 事业金钱 · 成长课题</div>
+<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
+</div>
+</div>
+</div>
+`;
+
+// Compatibility
+let compatHtml='<div class="content-block"><h3>💚 最佳拍档</h3>';
+for(let m of s.goodMatch){
+compatHtml+=`<div class="compat-item">
+<div class="compat-icon">💚</div>
+<div class="compat-sign">${m.sign}</div>
+<div class="compat-reason">${m.reason}</div>
+</div>`;
+}
+compatHtml+='</div><div class="divider-subtle"></div><div class="content-block"><h3>⚡ 挑战组合</h3>';
+for(let m of s.challengeMatch){
+compatHtml+=`<div class="compat-item">
+<div class="compat-icon">⚡</div>
+<div class="compat-sign">${m.sign}</div>
+<div class="compat-reason">${m.reason}</div>
+</div>`;
+}
+compatHtml+='</div>';
+document.getElementById('compatCard').innerHTML=compatHtml;
+
+// Soul mission (PAID)
+document.getElementById('soulCard').innerHTML=`
+<div class="content-block">
+<h3>🧭 灵魂使命 (北交点)</h3>
+<div class="paywall-wrap">
+<div class="paywall-content">
+<div style="margin:8px 0"><strong style="color:var(--gold-light)">需要发展的品质：</strong></div>
+<div class="trait-tags">${s.soulMission.develop.map(t=>`<span class="trait-tag" style="background:rgba(46,139,139,0.15);border-color:rgba(46,139,139,0.3);color:#4ac4c4">${t}</span>`).join('')}</div>
+<div style="margin:12px 0 8px"><strong style="color:var(--gold-light)">需要放下的倾向：</strong></div>
+<div class="trait-tags">${s.soulMission.leaveBehind.map(t=>`<span class="trait-tag" style="background:rgba(226,88,34,0.12);border-color:rgba(226,88,34,0.25);color:#ff7b4a">${t}</span>`).join('')}</div>
+<div style="margin:12px 0 8px"><strong style="color:var(--gold-light)">阿喀琉斯之踵：</strong></div>
+<p>${s.soulMission.achillesHeel}</p>
+</div>
+<div class="paywall-overlay">
+<div class="paywall-icon">🔮</div>
+<div class="paywall-text">解锁灵魂使命深度解读</div>
+<div class="paywall-sub">北交点指引 · 灵魂成长地图</div>
+<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
+</div>
+</div>
+</div>
+`;
 }
 
-// Init
-document.addEventListener('DOMContentLoaded', init);
+function renderFortuneTabs(){
+const tabs=document.getElementById('fortuneTabs');
+const periods=[
+{id:'daily',label:'今日'},
+{id:'weekly',label:'本周'},
+{id:'monthly',label:'本月'},
+{id:'quarterly',label:'本季度',locked:true},
+{id:'yearly',label:'2026全年',locked:true}
+];
+let html='';
+for(let p of periods){
+const active=p.id===currentPeriod?'active':'';
+const lock=p.locked?'<span class="lock">🔒</span>':'';
+html+=`<div class="fortune-tab ${active}" onclick="switchPeriod('${p.id}')">${p.label}${lock}</div>`;
+}
+tabs.innerHTML=html;
+}
+
+function switchPeriod(period){
+currentPeriod=period;
+renderFortuneTabs();
+renderFortune();
+}
+
+function renderFortune(){
+const s=currentSign;
+const isPaid=currentPeriod==='quarterly'||currentPeriod==='yearly';
+const fortune=genFortune(s,currentPeriod);
+
+// Overall fortune
+const fcEl=document.getElementById('fortuneContent');
+let fcHtml=`
+<div class="star-display">
+<div class="big-stars">${starStr(fortune.overallStars)}</div>
+<div class="score-text">综合运势 ${fortune.overallStars}.0 / 5.0</div>
+</div>
+<div class="divider-subtle"></div>
+`;
+if(isPaid){
+fcHtml+=`<div class="paywall-wrap">
+<div class="paywall-content"><p>${fortune.overallText}</p>
+<div style="margin-top:10px" class="attr-grid">
+<div class="attr-item"><div class="attr-label">幸运颜色</div><div class="attr-value">${fortune.luckyColor}</div></div>
+<div class="attr-item"><div class="attr-label">幸运数字</div><div class="attr-value">${fortune.luckyNum}</div></div>
+<div class="attr-item"><div class="attr-label">幸运方位</div><div class="attr-value">${fortune.luckyDir}</div></div>
+<div class="attr-item"><div class="attr-label">幸运时段</div><div class="attr-value">${fortune.luckyTime}</div></div>
+</div></div>
+<div class="paywall-overlay">
+<div class="paywall-icon">🔮</div>
+<div class="paywall-text">解锁完整${currentPeriod==='quarterly'?'季度':'年度'}运势</div>
+<div class="paywall-sub">深度解读你的星象密码</div>
+<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
+</div></div>`;
+}else{
+fcHtml+=`<p style="font-size:0.9em;line-height:2;text-indent:2em;margin-bottom:12px">${fortune.overallText}</p>
+<div class="attr-grid">
+<div class="attr-item"><div class="attr-label">幸运颜色</div><div class="attr-value">${fortune.luckyColor}</div></div>
+<div class="attr-item"><div class="attr-label">幸运数字</div><div class="attr-value">${fortune.luckyNum}</div></div>
+<div class="attr-item"><div class="attr-label">幸运方位</div><div class="attr-value">${fortune.luckyDir}</div></div>
+<div class="attr-item"><div class="attr-label">幸运时段</div><div class="attr-value">${fortune.luckyTime}</div></div>
+</div>`;
+}
+fcEl.innerHTML=fcHtml;
+
+// Dimension cards
+const dimEl=document.getElementById('dimCards');
+if(isPaid){
+let dHtml='<div class="paywall-wrap"><div class="paywall-content">';
+for(let d of fortune.dims){
+dHtml+=`<div class="dim-card">
+<div class="dim-header"><span class="dim-icon">${d.icon}</span><span class="dim-name">${d.name}</span><span class="dim-stars">${starStr(d.stars)}</span></div>
+<div class="dim-text">${d.text}</div>
+<div class="dim-tip">💡 ${d.tip}</div>
+</div>`;
+}
+dHtml+=`</div><div class="paywall-overlay">
+<div class="paywall-icon">🔮</div>
+<div class="paywall-text">解锁四维运势深度解读</div>
+<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
+</div></div>`;
+dimEl.innerHTML=dHtml;
+}else{
+let dHtml='';
+for(let d of fortune.dims){
+dHtml+=`<div class="dim-card glass-card">
+<div class="dim-header"><span class="dim-icon">${d.icon}</span><span class="dim-name">${d.name}</span><span class="dim-stars">${starStr(d.stars)}</span></div>
+<div class="dim-text">${d.text}</div>
+<div class="dim-tip">💡 ${d.tip}</div>
+</div>`;
+}
+dimEl.innerHTML=dHtml;
+}
+
+// Power/Caution days
+const daysEl=document.getElementById('daysCard');
+if((currentPeriod==='weekly'||currentPeriod==='monthly')&&!isPaid){
+daysEl.style.display='block';
+let dayHtml='<div class="content-block"><h3>🌟 幸运日</h3>';
+for(let d of fortune.powerDays){
+dayHtml+=`<div class="day-item"><div class="day-date">${d.date}</div><div class="day-desc">${d.desc}</div></div>`;
+}
+dayHtml+='</div><div class="divider-subtle"></div><div class="content-block"><h3>⚠️ 注意日</h3>';
+for(let d of fortune.cautionDays){
+dayHtml+=`<div class="day-item"><div class="day-date">${d.date}</div><div class="day-desc">${d.desc}</div></div>`;
+}
+dayHtml+='</div>';
+daysEl.innerHTML=dayHtml;
+}else{
+daysEl.style.display='none';
+}
+
+// Moon phase
+const moonInfo=getMoonInfo();
+const moonRng=seededRng(dateKey,s.id,'moon');
+const moonAdvicePool=T.moonAdvice[moonInfo.name]||T.moonAdvice['新月'];
+const moonText=fillTemplate(pick(moonAdvicePool,moonRng),s);
+document.getElementById('moonCard').innerHTML=`
+<div class="moon-display">
+<div class="moon-icon">${moonInfo.emoji}</div>
+<div class="moon-name">${moonInfo.name}</div>
+</div>
+<div class="content-block">
+<h3>🌙 月相指引</h3>
+<p>${moonText}</p>
+</div>
+`;
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+renderRankings();
+renderGrid();
+
 </script>
 </body>
 </html>
