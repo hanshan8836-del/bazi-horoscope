@@ -360,6 +360,19 @@ to{opacity:1;transform:translateY(0)}
   .header h1{font-size:1.5em;letter-spacing:5px}
 }
 
+/* Paywall */
+.paywall-wrap{position:relative}
+.paywall-blur{filter:blur(8px);pointer-events:none;user-select:none;-webkit-user-select:none}
+.paywall-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;background:rgba(8,8,16,0.6);border-radius:var(--radius);backdrop-filter:blur(4px)}
+.paywall-icon{font-size:2.4em;margin-bottom:8px}
+.paywall-text{font-size:1em;color:var(--text);text-align:center;line-height:1.6;margin-bottom:10px}
+.paywall-sub{font-size:0.8em;color:var(--text-dim);margin-bottom:12px}
+.paywall-btn{display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#1a7a1a,#2d9e2d);border:1px solid rgba(80,200,80,0.4);color:#fff;font-size:1.1em;font-weight:bold;border-radius:12px;cursor:pointer;letter-spacing:3px;box-shadow:0 4px 16px rgba(0,120,0,0.25);transition:all 0.3s;text-decoration:none}
+.paywall-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,120,0,0.4)}
+.paywall-price{margin-top:8px;font-size:0.8em;color:var(--text-dim)}
+.paywall-price b{color:#FFD700;font-size:1.4em}
+.fortune-tab .lock-icon{font-size:0.7em;margin-left:2px;opacity:0.7}
+
 </style>
 </head>
 <body>
@@ -1336,6 +1349,12 @@ function fortuneLevel(score) {
 // APPLICATION LOGIC
 // ============================================================
 
+// Detect paid status: Worker injects __GX_PAID, or check cookie, or GitHub Pages preview
+const isPaid = (typeof window.__GX_PAID !== 'undefined' && window.__GX_PAID === true)
+  || document.cookie.includes('gx_horoscope=')
+  || location.hostname.includes('github.io')
+  || location.protocol === 'file:';
+
 let currentSign = null;
 let currentFortuneTab = 'today';
 
@@ -1543,10 +1562,10 @@ function selectSign(idx) {
       <div class="card-title">运势预测</div>
       <div class="fortune-tabs">
         <div class="fortune-tab active" onclick="switchFortune(this,'today')">今日</div>
-        <div class="fortune-tab" onclick="switchFortune(this,'week')">本周</div>
-        <div class="fortune-tab" onclick="switchFortune(this,'month')">本月</div>
-        <div class="fortune-tab" onclick="switchFortune(this,'quarter')">本季</div>
-        <div class="fortune-tab" onclick="switchFortune(this,'year')">本年</div>
+        <div class="fortune-tab" onclick="switchFortune(this,'week')">本周${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
+        <div class="fortune-tab" onclick="switchFortune(this,'month')">本月${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
+        <div class="fortune-tab" onclick="switchFortune(this,'quarter')">本季${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
+        <div class="fortune-tab" onclick="switchFortune(this,'year')">本年${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
       </div>
       <div id="fortuneContent"></div>
     </div>`;
@@ -1593,6 +1612,35 @@ function renderFortune(period) {
   if (currentSign === null) return;
   const container = document.getElementById('fortuneContent');
   if (!container) return;
+
+  // Paywall: free users only get daily fortune
+  if (!isPaid && period !== 'today') {
+    container.innerHTML = `
+      <div class="paywall-wrap" style="min-height:300px">
+        <div class="paywall-blur">
+          <div class="glass-card" style="padding:20px;margin:10px 0">
+            <div style="text-align:center;font-size:1.4em;margin-bottom:10px">★★★★☆</div>
+            <p style="color:var(--text-dim);line-height:1.8">行星过境显示本阶段运势整体呈上升趋势，木星的扩展能量为你带来新的机遇和成长空间。守护星与太阳形成和谐相位，个人魅力和影响力显著提升...</p>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+            <div class="glass-card" style="padding:12px"><div style="color:var(--text-dim);font-size:0.8em">💕 爱情运势</div><div style="margin-top:4px">★★★★☆</div></div>
+            <div class="glass-card" style="padding:12px"><div style="color:var(--text-dim);font-size:0.8em">💼 事业运势</div><div style="margin-top:4px">★★★★★</div></div>
+            <div class="glass-card" style="padding:12px"><div style="color:var(--text-dim);font-size:0.8em">💰 财富运势</div><div style="margin-top:4px">★★★☆☆</div></div>
+            <div class="glass-card" style="padding:12px"><div style="color:var(--text-dim);font-size:0.8em">🌿 健康运势</div><div style="margin-top:4px">★★★★☆</div></div>
+          </div>
+        </div>
+        <div class="paywall-overlay">
+          <div class="paywall-icon">🔮</div>
+          <div class="paywall-text">解锁完整运势深度解读<br>本周 · 本月 · 本季 · 全年</div>
+          <div class="paywall-sub">基于真实行星过境的专业分析</div>
+          <div style="margin-bottom:10px"><s style="color:#888;font-size:0.9em">¥99.99</s> <span style="color:#FFD700;font-size:0.85em">限时优惠</span></div>
+          <a class="paywall-btn" href="/site/horoscope" onclick="if(window.top!==window.self){window.top.location.href='/site/horoscope';return false;}">💳 微信付款 ¥9.99 · 即得密钥</a>
+          <div class="paywall-price">一次购买 · 永久解锁全部时段</div>
+          <div style="margin-top:12px;font-size:0.85em;color:var(--text-dim)">已有密钥？<a href="/site/horoscope" onclick="if(window.top!==window.self){window.top.location.href='/site/horoscope';return false;}" style="color:var(--gold-dim)">点击输入</a></div>
+        </div>
+      </div>`;
+    return;
+  }
 
   const now = new Date();
   let date = now;
