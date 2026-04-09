@@ -1828,7 +1828,7 @@ ${paras.map(p=>`<p>${p}</p>`).join('')}
 <h3>💕 爱情与人际风格</h3>
 <p>${lovePara[0]}</p>
 <div class="paywall-wrap" style="margin-top:8px">
-<div class="paywall-content">
+<div class="${unlocked?'':'paywall-content'}">
 ${lovePara.slice(1).map(p=>`<p>${p}</p>`).join('')}
 <div class="content-block" style="margin-top:12px">
 <h3>💼 事业与金钱观</h3>
@@ -1839,13 +1839,13 @@ ${careerPara.map(p=>`<p>${p}</p>`).join('')}
 <p>${s.growthChallenge}</p>
 </div>
 </div>
-<div class="paywall-overlay">
+${unlocked?'':`<div class="paywall-overlay">
 <div class="paywall-icon">🔮</div>
-<div class="paywall-text">解锁完整性格深度解析</div>
-<div class="paywall-sub">爱情风格 · 事业金钱 · 成长课题</div>
+<div class="paywall-text">解锁完整性格深度解析</div>`}
+${unlocked?'':`<div class="paywall-sub">爱情风格 · 事业金钱 · 成长课题</div>
 <button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
 <div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
-</div>
+</div>`}
 </div>
 </div>
 `;
@@ -1875,7 +1875,7 @@ document.getElementById('soulCard').innerHTML=`
 <div class="content-block">
 <h3>🧭 灵魂使命 (北交点)</h3>
 <div class="paywall-wrap">
-<div class="paywall-content">
+<div class="${unlocked?'':'paywall-content'}">
 <div style="margin:8px 0"><strong style="color:var(--gold-light)">需要发展的品质：</strong></div>
 <div class="trait-tags">${s.soulMission.develop.map(t=>`<span class="trait-tag" style="background:rgba(46,139,139,0.15);border-color:rgba(46,139,139,0.3);color:#4ac4c4">${t}</span>`).join('')}</div>
 <div style="margin:12px 0 8px"><strong style="color:var(--gold-light)">需要放下的倾向：</strong></div>
@@ -1883,13 +1883,13 @@ document.getElementById('soulCard').innerHTML=`
 <div style="margin:12px 0 8px"><strong style="color:var(--gold-light)">阿喀琉斯之踵：</strong></div>
 <p>${s.soulMission.achillesHeel}</p>
 </div>
-<div class="paywall-overlay">
+${unlocked?'':`<div class="paywall-overlay">
 <div class="paywall-icon">🔮</div>
 <div class="paywall-text">解锁灵魂使命深度解读</div>
 <div class="paywall-sub">北交点指引 · 灵魂成长地图</div>
 <button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
 <div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
-</div>
+</div>`}
 </div>
 </div>
 `;
