@@ -1731,6 +1731,7 @@ return rankings;
 // ============================================================
 let currentSign=null;
 let currentPeriod='daily';
+let unlocked=false; // true after payment/unlock
 
 function renderRankings(){
 const rankings=genRankings();
@@ -1842,7 +1843,7 @@ ${careerPara.map(p=>`<p>${p}</p>`).join('')}
 <div class="paywall-icon">🔮</div>
 <div class="paywall-text">解锁完整性格深度解析</div>
 <div class="paywall-sub">爱情风格 · 事业金钱 · 成长课题</div>
-<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
 <div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
 </div>
 </div>
@@ -1886,7 +1887,7 @@ document.getElementById('soulCard').innerHTML=`
 <div class="paywall-icon">🔮</div>
 <div class="paywall-text">解锁灵魂使命深度解读</div>
 <div class="paywall-sub">北交点指引 · 灵魂成长地图</div>
-<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
 <div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
 </div>
 </div>
@@ -1920,7 +1921,7 @@ renderFortune();
 
 function renderFortune(){
 const s=currentSign;
-const isPaid=currentPeriod==='quarterly'||currentPeriod==='yearly';
+const isPaid=!unlocked&&(currentPeriod==='quarterly'||currentPeriod==='yearly');
 const fortune=genFortune(s,currentPeriod);
 
 // Overall fortune
@@ -1945,7 +1946,7 @@ fcHtml+=`<div class="paywall-wrap">
 <div class="paywall-icon">🔮</div>
 <div class="paywall-text">解锁完整${currentPeriod==='quarterly'?'季度':'年度'}运势</div>
 <div class="paywall-sub">深度解读你的星象密码</div>
-<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
 <div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
 </div></div>`;
 }else{
@@ -1992,7 +1993,7 @@ dHtml+=`<div class="dim-card">
 dHtml+=`</div><div class="paywall-overlay">
 <div class="paywall-icon">🔮</div>
 <div class="paywall-text">解锁四维运势深度解读</div>
-<button class="paywall-btn" onclick="window.top.location.href='/site/horoscope'">立即解锁 &yen;9.99</button>
+<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
 <div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
 </div></div>`;
 dimEl.innerHTML=dHtml;
@@ -2046,6 +2047,21 @@ document.getElementById('moonCard').innerHTML=`
 // ============================================================
 // INITIALIZATION
 // ============================================================
+// Unlock handler: local = show content; online = go to payment
+function doUnlock(){
+  if(location.protocol==='file:' || location.hostname==='localhost' || location.hostname==='127.0.0.1'){
+    // Local preview: just unlock everything
+    unlocked=true;
+    document.querySelectorAll('.paywall-content').forEach(el=>{el.style.filter='none';el.style.pointerEvents='auto';el.style.userSelect='auto'});
+    document.querySelectorAll('.paywall-overlay').forEach(el=>el.style.display='none');
+    // Re-render current sign if selected
+    if(currentSign){ renderSignDetail(); renderFortune(); }
+    alert('本地预览模式：已解锁全部内容');
+  } else {
+    window.top.location.href='/site/horoscope';
+  }
+}
+
 renderSkyCard();
 renderRankings();
 renderGrid();
