@@ -2049,16 +2049,15 @@ document.getElementById('moonCard').innerHTML=`
 // ============================================================
 // Unlock handler: local = show content; online = go to payment
 function doUnlock(){
-  if(location.protocol==='file:' || location.hostname==='localhost' || location.hostname==='127.0.0.1'){
-    // Local preview: just unlock everything
+  if(location.hostname==='hanshan36.com'){
+    // Production: go to payment page
+    window.top.location.href='/site/horoscope';
+  } else {
+    // Preview (local/GitHub Pages/localhost): unlock directly
     unlocked=true;
     document.querySelectorAll('.paywall-content').forEach(el=>{el.style.filter='none';el.style.pointerEvents='auto';el.style.userSelect='auto'});
     document.querySelectorAll('.paywall-overlay').forEach(el=>el.style.display='none');
-    // Re-render current sign if selected
     if(currentSign){ renderSignDetail(); renderFortune(); }
-    alert('本地预览模式：已解锁全部内容');
-  } else {
-    window.top.location.href='/site/horoscope';
   }
 }
 
