@@ -192,26 +192,6 @@ border:1px solid rgba(255,255,255,0.03);
 .compat-sign{font-size:0.9em;color:var(--gold-light);font-weight:bold;min-width:50px}
 .compat-reason{font-size:0.82em;color:var(--text-dim);flex:1}
 
-/* Paywall */
-.paywall-wrap{position:relative;overflow:hidden;border-radius:var(--radius)}
-.paywall-content{filter:blur(8px);pointer-events:none;user-select:none;-webkit-user-select:none}
-.paywall-overlay{
-position:absolute;top:0;left:0;right:0;bottom:0;
-display:flex;flex-direction:column;align-items:center;justify-content:center;
-background:rgba(8,8,16,0.5);z-index:2;padding:20px;text-align:center;
-}
-.paywall-icon{font-size:2.5em;margin-bottom:8px;filter:drop-shadow(0 0 12px rgba(212,175,55,0.4))}
-.paywall-text{color:var(--text);font-size:0.92em;letter-spacing:1px;margin-bottom:4px}
-.paywall-sub{color:var(--text-dim);font-size:0.78em;margin-bottom:14px}
-.paywall-btn{
-display:inline-block;padding:12px 32px;border-radius:30px;
-background:linear-gradient(135deg,var(--gold),var(--gold-dark));
-color:#1a1a2e;font-size:0.95em;font-weight:bold;letter-spacing:2px;
-cursor:pointer;border:none;transition:all 0.3s;
-box-shadow:0 4px 20px rgba(212,175,55,0.3);
-}
-.paywall-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(212,175,55,0.4)}
-.paywall-hint{color:var(--text-muted);font-size:0.72em;margin-top:8px}
 
 /* Fortune tabs */
 .fortune-tabs{
@@ -229,7 +209,6 @@ letter-spacing:1px;position:relative;
 .fortune-tab.active{
 background:rgba(212,175,55,0.12);color:var(--gold);font-weight:bold;
 }
-.fortune-tab .lock{font-size:0.75em;vertical-align:super}
 
 /* Star display */
 .star-display{text-align:center;margin:14px 0}
@@ -368,7 +347,7 @@ padding-left:12px;border-left:2px solid rgba(212,175,55,0.15);
 
 <!-- Back Nav -->
 <nav class="back-nav">
-<a href="/" onclick="if(window.top!==window.self){window.top.location.href='/';return false;}">
+<a href="javascript:void(0)" onclick="if(window.top!==window.self){window.top.location.href='/';}else{history.back()||location.href='/';}">
 <span>&#8592;</span> 返回首页
 </a>
 </nav>
@@ -1731,7 +1710,6 @@ return rankings;
 // ============================================================
 let currentSign=null;
 let currentPeriod='daily';
-let unlocked=false; // true after payment/unlock
 
 function renderRankings(){
 const rankings=genRankings();
@@ -1826,10 +1804,8 @@ ${paras.map(p=>`<p>${p}</p>`).join('')}
 <div class="divider-subtle"></div>
 <div class="content-block">
 <h3>💕 爱情与人际风格</h3>
-<p>${lovePara[0]}</p>
-<div class="paywall-wrap" style="margin-top:8px">
-<div class="${unlocked?'':'paywall-content'}">
-${lovePara.slice(1).map(p=>`<p>${p}</p>`).join('')}
+${lovePara.map(p=>`<p>${p}</p>`).join('')}
+</div>
 <div class="content-block" style="margin-top:12px">
 <h3>💼 事业与金钱观</h3>
 ${careerPara.map(p=>`<p>${p}</p>`).join('')}
@@ -1837,16 +1813,6 @@ ${careerPara.map(p=>`<p>${p}</p>`).join('')}
 <div class="content-block">
 <h3>🌱 成长课题</h3>
 <p>${s.growthChallenge}</p>
-</div>
-</div>
-${unlocked?'':`<div class="paywall-overlay">
-<div class="paywall-icon">🔮</div>
-<div class="paywall-text">解锁完整性格深度解析</div>`}
-${unlocked?'':`<div class="paywall-sub">爱情风格 · 事业金钱 · 成长课题</div>
-<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
-<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
-</div>`}
-</div>
 </div>
 `;
 
@@ -1870,27 +1836,16 @@ compatHtml+=`<div class="compat-item">
 compatHtml+='</div>';
 document.getElementById('compatCard').innerHTML=compatHtml;
 
-// Soul mission (PAID)
+// Soul mission
 document.getElementById('soulCard').innerHTML=`
 <div class="content-block">
 <h3>🧭 灵魂使命 (北交点)</h3>
-<div class="paywall-wrap">
-<div class="${unlocked?'':'paywall-content'}">
 <div style="margin:8px 0"><strong style="color:var(--gold-light)">需要发展的品质：</strong></div>
 <div class="trait-tags">${s.soulMission.develop.map(t=>`<span class="trait-tag" style="background:rgba(46,139,139,0.15);border-color:rgba(46,139,139,0.3);color:#4ac4c4">${t}</span>`).join('')}</div>
 <div style="margin:12px 0 8px"><strong style="color:var(--gold-light)">需要放下的倾向：</strong></div>
 <div class="trait-tags">${s.soulMission.leaveBehind.map(t=>`<span class="trait-tag" style="background:rgba(226,88,34,0.12);border-color:rgba(226,88,34,0.25);color:#ff7b4a">${t}</span>`).join('')}</div>
 <div style="margin:12px 0 8px"><strong style="color:var(--gold-light)">阿喀琉斯之踵：</strong></div>
 <p>${s.soulMission.achillesHeel}</p>
-</div>
-${unlocked?'':`<div class="paywall-overlay">
-<div class="paywall-icon">🔮</div>
-<div class="paywall-text">解锁灵魂使命深度解读</div>
-<div class="paywall-sub">北交点指引 · 灵魂成长地图</div>
-<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
-<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
-</div>`}
-</div>
 </div>
 `;
 }
@@ -1901,14 +1856,13 @@ const periods=[
 {id:'daily',label:'今日'},
 {id:'weekly',label:'本周'},
 {id:'monthly',label:'本月'},
-{id:'quarterly',label:'本季度',locked:true},
-{id:'yearly',label:'2026全年',locked:true}
+{id:'quarterly',label:'本季度'},
+{id:'yearly',label:'2026全年'}
 ];
 let html='';
 for(let p of periods){
 const active=p.id===currentPeriod?'active':'';
-const lock=p.locked?'<span class="lock">🔒</span>':'';
-html+=`<div class="fortune-tab ${active}" onclick="switchPeriod('${p.id}')">${p.label}${lock}</div>`;
+html+=`<div class="fortune-tab ${active}" onclick="switchPeriod('${p.id}')">${p.label}</div>`;
 }
 tabs.innerHTML=html;
 }
@@ -1921,7 +1875,6 @@ renderFortune();
 
 function renderFortune(){
 const s=currentSign;
-const isPaid=!unlocked&&(currentPeriod==='quarterly'||currentPeriod==='yearly');
 const fortune=genFortune(s,currentPeriod);
 
 // Overall fortune
@@ -1933,23 +1886,6 @@ let fcHtml=`
 </div>
 <div class="divider-subtle"></div>
 `;
-if(isPaid){
-fcHtml+=`<div class="paywall-wrap">
-<div class="paywall-content"><p>${fortune.overallText}</p>
-<div style="margin-top:10px" class="attr-grid">
-<div class="attr-item"><div class="attr-label">幸运颜色</div><div class="attr-value">${fortune.luckyColor}</div></div>
-<div class="attr-item"><div class="attr-label">幸运数字</div><div class="attr-value">${fortune.luckyNum}</div></div>
-<div class="attr-item"><div class="attr-label">幸运方位</div><div class="attr-value">${fortune.luckyDir}</div></div>
-<div class="attr-item"><div class="attr-label">幸运时段</div><div class="attr-value">${fortune.luckyTime}</div></div>
-</div></div>
-<div class="paywall-overlay">
-<div class="paywall-icon">🔮</div>
-<div class="paywall-text">解锁完整${currentPeriod==='quarterly'?'季度':'年度'}运势</div>
-<div class="paywall-sub">深度解读你的星象密码</div>
-<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
-<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
-</div></div>`;
-}else{
 fcHtml+=`<p style="font-size:0.9em;line-height:2;text-indent:2em;margin-bottom:12px">${fortune.overallText}</p>
 <div class="attr-grid">
 <div class="attr-item"><div class="attr-label">幸运颜色</div><div class="attr-value">${fortune.luckyColor}</div></div>
@@ -1976,28 +1912,10 @@ ${aspName?'<span class="t-aspect '+aspClass+'">'+aspSymbol+aspName+'</span>':''}
 }
 fcHtml+=`</div>`;
 }
-}
 fcEl.innerHTML=fcHtml;
 
 // Dimension cards
 const dimEl=document.getElementById('dimCards');
-if(isPaid){
-let dHtml='<div class="paywall-wrap"><div class="paywall-content">';
-for(let d of fortune.dims){
-dHtml+=`<div class="dim-card">
-<div class="dim-header"><span class="dim-icon">${d.icon}</span><span class="dim-name">${d.name}</span><span class="dim-stars">${starStr(d.stars)}</span></div>
-<div class="dim-text">${d.text}</div>
-<div class="dim-tip">💡 ${d.tip}</div>
-</div>`;
-}
-dHtml+=`</div><div class="paywall-overlay">
-<div class="paywall-icon">🔮</div>
-<div class="paywall-text">解锁四维运势深度解读</div>
-<button class="paywall-btn" onclick="doUnlock()">立即解锁 &yen;9.99</button>
-<div class="paywall-hint">一次购买 &middot; 永久查看全部深度内容</div>
-</div></div>`;
-dimEl.innerHTML=dHtml;
-}else{
 let dHtml='';
 for(let d of fortune.dims){
 dHtml+=`<div class="dim-card glass-card">
@@ -2007,11 +1925,10 @@ dHtml+=`<div class="dim-card glass-card">
 </div>`;
 }
 dimEl.innerHTML=dHtml;
-}
 
 // Power/Caution days
 const daysEl=document.getElementById('daysCard');
-if((currentPeriod==='weekly'||currentPeriod==='monthly')&&!isPaid){
+if(currentPeriod==='weekly'||currentPeriod==='monthly'){
 daysEl.style.display='block';
 let dayHtml='<div class="content-block"><h3>🌟 幸运日</h3>';
 for(let d of fortune.powerDays){
@@ -2047,19 +1964,6 @@ document.getElementById('moonCard').innerHTML=`
 // ============================================================
 // INITIALIZATION
 // ============================================================
-// Unlock handler: local = show content; online = go to payment
-function doUnlock(){
-  if(location.hostname==='hanshan36.com'){
-    // Production: go to payment page
-    window.top.location.href='/site/horoscope';
-  } else {
-    // Preview (local/GitHub Pages/localhost): unlock directly
-    unlocked=true;
-    document.querySelectorAll('.paywall-content').forEach(el=>{el.style.filter='none';el.style.pointerEvents='auto';el.style.userSelect='auto'});
-    document.querySelectorAll('.paywall-overlay').forEach(el=>el.style.display='none');
-    if(currentSign){ renderSignDetail(); renderFortune(); }
-  }
-}
 
 renderSkyCard();
 renderRankings();
