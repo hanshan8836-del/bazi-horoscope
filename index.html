@@ -15,13 +15,14 @@
 --border:rgba(212,175,55,0.2);--shadow:0 8px 32px rgba(0,0,0,0.6);
 --glass-bg:rgba(18,18,32,0.7);--glass-border:rgba(212,175,55,0.15);
 --fire:#e74c3c;--earth:#b8860b;--air:#5dade2;--water:#2e86c1;
+--radius:14px;
 }
 @font-face{font-family:'kai';src:local('KaiTi'),local('STKaiti'),local('AR PL UKai CN')}
 html{scroll-behavior:smooth}
 body{
 font-family:'Microsoft YaHei','PingFang SC','Helvetica Neue',sans-serif;
 background:var(--bg-primary);color:var(--text);
-min-height:100vh;line-height:1.8;font-size:15px;
+min-height:100vh;line-height:1.8;font-size:16px;
 overflow-x:hidden;
 background-image:
   radial-gradient(ellipse at 20% 0%,rgba(212,175,55,0.04) 0%,transparent 50%),
@@ -42,7 +43,7 @@ background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='htt
 padding:8px 0;margin-bottom:8px;
 }
 .back-nav a{
-color:var(--gold-dim);text-decoration:none;font-size:14px;
+color:var(--gold);text-decoration:none;font-size:15px;
 transition:color 0.3s;
 }
 .back-nav a:hover{color:var(--gold)}
@@ -111,8 +112,8 @@ transition:all 0.3s;
 }
 .sky-item:hover{background:rgba(212,175,55,0.1);transform:translateY(-2px)}
 .sky-item .planet-sym{font-size:1.2em;display:block;margin-bottom:2px}
-.sky-item .planet-name{font-size:0.65em;color:var(--text-dim);display:block}
-.sky-item .planet-pos{font-size:0.7em;color:var(--gold-light);display:block;margin-top:2px}
+.sky-item .planet-name{font-size:0.72em;color:var(--text-dim);display:block}
+.sky-item .planet-pos{font-size:0.78em;color:var(--gold-light);display:block;margin-top:2px}
 .sky-item.retro{border-color:rgba(231,76,60,0.4)}
 .sky-item.retro .planet-pos::after{content:' \u211E';color:#e74c3c;font-size:0.9em}
 
@@ -173,11 +174,12 @@ cursor:pointer;transition:all 0.3s;
 -webkit-tap-highlight-color:transparent;
 user-select:none;
 }
-.zodiac-btn:hover,.zodiac-btn.active{
+.zodiac-btn:hover,.zodiac-btn:focus,.zodiac-btn.active{
 background:rgba(212,175,55,0.12);
 border-color:var(--gold);
 transform:translateY(-3px);
 box-shadow:0 4px 20px rgba(212,175,55,0.2);
+outline:none;
 }
 .zodiac-btn .z-icon{font-size:1.6em;display:block;margin-bottom:4px}
 .zodiac-btn .z-name{font-size:0.85em;color:var(--gold-light);display:block}
@@ -218,9 +220,9 @@ border-right:1px solid var(--glass-border);
 -webkit-tap-highlight-color:transparent;
 }
 .persona-tab:last-child{border-right:none}
-.persona-tab.active,.persona-tab:hover{
+.persona-tab.active,.persona-tab:hover,.persona-tab:focus{
 background:rgba(212,175,55,0.15);
-color:var(--gold);
+color:var(--gold);outline:none;
 }
 .persona-content{
 font-size:0.9em;line-height:2;color:var(--text);
@@ -278,8 +280,8 @@ border-right:1px solid var(--glass-border);
 -webkit-tap-highlight-color:transparent;
 }
 .fortune-tab:last-child{border-right:none}
-.fortune-tab.active,.fortune-tab:hover{
-background:rgba(212,175,55,0.15);color:var(--gold);
+.fortune-tab.active,.fortune-tab:hover,.fortune-tab:focus{
+background:rgba(212,175,55,0.15);color:var(--gold);outline:none;
 }
 
 /* Fortune content */
@@ -360,15 +362,18 @@ to{opacity:1;transform:translateY(0)}
   .header h1{font-size:1.5em;letter-spacing:5px}
 }
 
+/* Glass card (paywall preview) */
+.glass-card{background:var(--glass-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:var(--shadow)}
+
 /* Paywall */
 .paywall-wrap{position:relative}
 .paywall-blur{filter:blur(8px);pointer-events:none;user-select:none;-webkit-user-select:none}
-.paywall-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;background:rgba(8,8,16,0.6);border-radius:var(--radius);backdrop-filter:blur(4px)}
+.paywall-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;background:rgba(8,8,16,0.6);border-radius:14px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .paywall-icon{font-size:2.4em;margin-bottom:8px}
 .paywall-text{font-size:1em;color:var(--text);text-align:center;line-height:1.6;margin-bottom:10px}
 .paywall-sub{font-size:0.8em;color:var(--text-dim);margin-bottom:12px}
-.paywall-btn{display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#1a7a1a,#2d9e2d);border:1px solid rgba(80,200,80,0.4);color:#fff;font-size:1.1em;font-weight:bold;border-radius:12px;cursor:pointer;letter-spacing:3px;box-shadow:0 4px 16px rgba(0,120,0,0.25);transition:all 0.3s;text-decoration:none}
-.paywall-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,120,0,0.4)}
+.paywall-btn{display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#8B6914,#D4AF37);border:1px solid rgba(212,175,55,0.5);color:#fff;font-size:1.1em;font-weight:bold;border-radius:12px;cursor:pointer;letter-spacing:3px;box-shadow:0 4px 16px rgba(212,175,55,0.2);transition:all 0.3s;text-decoration:none}
+.paywall-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,175,55,0.35);background:linear-gradient(135deg,#D4AF37,#F0D68A)}
 .paywall-price{margin-top:8px;font-size:0.8em;color:var(--text-dim)}
 .paywall-price b{color:#FFD700;font-size:1.4em}
 .fortune-tab .lock-icon{font-size:0.7em;margin-left:2px;opacity:0.7}
@@ -1841,7 +1846,7 @@ function initStarCanvas() {
   window.addEventListener('resize', resize);
 
   // Create stars
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 50; i++) {
     stars.push({
       x: Math.random() * w,
       y: Math.random() * h,
