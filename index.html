@@ -1305,7 +1305,7 @@ function genTransitText(fortune, signKey) {
   // Most important transits (by planet weight)
   const sorted = [...transits].sort((a,b) => (PLANET_WEIGHT[b.planet]||0) - (PLANET_WEIGHT[a.planet]||0));
 
-  for (let i = 0; i < Math.min(4, sorted.length); i++) {
+  for (let i = 0; i < Math.min(6, sorted.length); i++) {
     const t = sorted[i];
     const desc = TRANSIT[t.planet] && TRANSIT[t.planet][t.house];
     if (desc) texts.push(desc);
@@ -1334,10 +1334,16 @@ function genLucky(fortune, signIdx, date) {
   const marsSign = transits.find(t => t.planet === 'mars');
   const dirIdx = marsSign ? (marsSign.sign + signIdx) % directions.length : (dayOfYear + signIdx) % directions.length;
 
+  const colorReasons = ['火象能量激发热情与行动力','暖色调带来创造力与社交活力','金属性共振招财纳福','木元素促进成长与疗愈','水象能量增强直觉与冷静','灵性能量提升洞察力','月亮金属色增强感知力','净化能量带来清晰思路','柔和频率促进人际和谐','深沉力量增强定力与保护','大地能量带来稳定与安全','清新能量促进沟通与表达'];
+  const dirReasons = ['木气旺盛，利于开拓新事','紫气东来，财运汇聚之方','火气充沛，利于展示自我','稳重之方，适合沉淀思考','金气凝聚，利于收获成果','贵人之方，利于寻求帮助','水气聚集，利于蓄积能量','生气之方，利于启动新计划'];
+
   return {
     color: colors[colorIdx],
+    colorReason: venusSign ? '金星落入'+SIGNS[venusSign.sign]+'，'+colorReasons[colorIdx] : colorReasons[colorIdx],
     number: luckyNum,
-    direction: directions[dirIdx]
+    numberReason: jupSign ? '木星在'+SIGNS[jupSign.sign]+Math.floor(jupSign.deg)+'度的能量共振' : '今日数字频率与你的星座能量同调',
+    direction: directions[dirIdx],
+    directionReason: marsSign ? '火星指引: '+dirReasons[dirIdx] : dirReasons[dirIdx]
   };
 }
 
@@ -1348,6 +1354,34 @@ function fortuneLevel(score) {
   if (score >= 55) return {level:'中',color:'#f39c12',stars:3};
   if (score >= 40) return {level:'平',color:'#95a5a6',stars:2};
   return {level:'凶',color:'#e74c3c',stars:1};
+}
+
+// Compatibility scoring based on element harmony
+function calcCompat(signIdx, element) {
+  const elemReasons = {
+    'fire-fire':'同属火象，激情碰撞，能量共振强烈，彼此激励成长',
+    'fire-air':'火风相助，灵感与行动力完美结合，沟通活跃',
+    'fire-earth':'火土碰撞，节奏差异大，但互补性强，需要磨合',
+    'fire-water':'火水相克，情感表达方式截然不同，需要极大耐心',
+    'earth-earth':'同属土象，稳固可靠，步调一致，但可能缺少激情',
+    'earth-water':'土水相融，情感深厚而稳定，彼此给予安全感',
+    'earth-air':'土风相异，务实与理想的碰撞，需找到平衡点',
+    'air-air':'同属风象，思想共鸣，交流无障碍，但可能缺乏深度',
+    'air-water':'风水相遇，理性与感性的交锋，需要互相理解',
+    'water-water':'同属水象，情感深度极高，共情力强，但易过度情绪化'
+  };
+  const getElemPair = (e1, e2) => {
+    const pair = [e1,e2].sort().join('-');
+    return elemReasons[pair] || '独特的能量组合，充满可能性';
+  };
+  const bestElem = element === 'fire' ? 'fire' : element === 'earth' ? 'earth' : element === 'air' ? 'air' : 'water';
+  const goodElem = element === 'fire' ? 'air' : element === 'earth' ? 'water' : element === 'air' ? 'fire' : 'earth';
+  const challengeElem = element === 'fire' ? 'water' : element === 'earth' ? 'air' : element === 'air' ? 'earth' : 'fire';
+  return {
+    bestReason: getElemPair(element, bestElem),
+    goodReason: getElemPair(element, goodElem),
+    challengeReason: getElemPair(element, challengeElem)
+  };
 }
 
 // ============================================================
@@ -1550,14 +1584,15 @@ function selectSign(idx) {
       </div>
     </div>`;
 
-  // Compatibility
+  // Compatibility with scores
+  const compatScore = calcCompat(currentSign, data.element);
   let compatHtml = `
     <div class="card fade-in" style="animation-delay:0.3s">
       <div class="card-title">星座配对</div>
       <div class="compat-grid">
-        <div class="compat-item"><span class="compat-label">最佳搭档</span><span class="compat-signs" style="color:#2ecc71">${data.compat.best}</span></div>
-        <div class="compat-item"><span class="compat-label">良好组合</span><span class="compat-signs" style="color:var(--gold)">${data.compat.good}</span></div>
-        <div class="compat-item" style="grid-column:1/-1"><span class="compat-label">需要磨合</span><span class="compat-signs" style="color:#e74c3c">${data.compat.challenge}</span></div>
+        <div class="compat-item"><span class="compat-label">最佳搭档</span><span class="compat-signs" style="color:#2ecc71">${data.compat.best}</span><span style="display:block;font-size:0.72em;color:var(--text-dim);margin-top:4px">${compatScore.bestReason}</span></div>
+        <div class="compat-item"><span class="compat-label">良好组合</span><span class="compat-signs" style="color:var(--gold)">${data.compat.good}</span><span style="display:block;font-size:0.72em;color:var(--text-dim);margin-top:4px">${compatScore.goodReason}</span></div>
+        <div class="compat-item" style="grid-column:1/-1"><span class="compat-label">需要磨合</span><span class="compat-signs" style="color:#e74c3c">${data.compat.challenge}</span><span style="display:block;font-size:0.72em;color:var(--text-dim);margin-top:4px">${compatScore.challengeReason}</span></div>
       </div>
     </div>`;
 
@@ -1744,9 +1779,9 @@ function renderFortune(period) {
     </div>
 
     <div class="lucky-grid">
-      <div class="lucky-item"><span class="lucky-label">幸运色</span><span class="lucky-value">${lucky.color}</span></div>
-      <div class="lucky-item"><span class="lucky-label">幸运数</span><span class="lucky-value">${lucky.number}</span></div>
-      <div class="lucky-item"><span class="lucky-label">幸运方位</span><span class="lucky-value">${lucky.direction}</span></div>
+      <div class="lucky-item"><span class="lucky-label">幸运色</span><span class="lucky-value">${lucky.color}</span><span style="display:block;font-size:0.68em;color:var(--text-dim);margin-top:4px;line-height:1.4">${lucky.colorReason}</span></div>
+      <div class="lucky-item"><span class="lucky-label">幸运数</span><span class="lucky-value">${lucky.number}</span><span style="display:block;font-size:0.68em;color:var(--text-dim);margin-top:4px;line-height:1.4">${lucky.numberReason}</span></div>
+      <div class="lucky-item"><span class="lucky-label">幸运方位</span><span class="lucky-value">${lucky.direction}</span><span style="display:block;font-size:0.68em;color:var(--text-dim);margin-top:4px;line-height:1.4">${lucky.directionReason}</span></div>
     </div>`;
 
   // Power days for week/month
@@ -1758,26 +1793,163 @@ function renderFortune(period) {
 }
 
 function genDimText(dim, score, fortune, signIdx) {
+  // Find the dominant planet for this dimension
+  const dimPlanets = {love:['venus','moon'],career:['saturn','jupiter','sun'],wealth:['jupiter','venus'],health:['mars','saturn']};
+  const relevant = fortune.aspects.find(a => dimPlanets[dim].includes(a.planet));
+  const pn = relevant ? PLANET_NAMES[relevant.planet] : '';
+
   const texts = {
     love: {
-      high:['桃花运势旺盛，单身者容易遇到心仪的对象。','感情生活甜蜜和谐，伴侣之间的默契度提升。','浪漫的能量环绕着你，适合表达爱意和深化关系。'],
-      mid:['感情运势平稳，重要的是保持真诚的沟通。','感情方面不急不躁，用心经营当下的关系。','平淡中蕴含温馨，珍惜身边人的陪伴。'],
-      low:['感情上可能遇到一些摩擦，需要更多耐心和理解。','避免因小事引发争执，学会退一步海阔天空。','感情需要经营，不要把压力转嫁给伴侣。']
+      high:[
+        '桃花运势旺盛，单身者容易在社交场合遇到心仪的对象，主动出击会有惊喜。',
+        '感情生活甜蜜和谐，伴侣之间的默契度达到新高，适合一起规划未来。',
+        '浪漫的能量环绕着你，适合表达爱意、制造惊喜，深化彼此的情感连接。',
+        pn?pn+'的和谐能量加持你的感情领域，魅力指数飙升，异性缘明显增强。':'你散发着温暖的光芒，身边人会不自觉被你吸引。',
+        '感情中充满正能量，有伴者默契加深，单身者可能收到意想不到的告白。',
+        '爱情运势进入甜蜜期，适合约会、旅行或共同体验新事物来增进感情。',
+        '你的温柔和真诚会被对方深深感受到，感情中的小付出会换来大回报。',
+        '情感表达能力增强，内心的柔软容易触动他人，把握这段浪漫的时光。',
+        '社交活动中可能遇到灵魂共鸣的人，保持开放心态，缘分就在转角处。',
+        '这是修复关系裂痕的好时机，一次真诚的对话胜过千言万语的猜测。'
+      ],
+      mid:[
+        '感情运势平稳，重要的是保持真诚坦率的沟通，不要让猜疑侵蚀信任。',
+        '感情方面不急不躁，用心经营当下的关系，平凡中有真情。',
+        '平淡中蕴含温馨，珍惜身边人的陪伴，一个拥抱胜过千句甜言蜜语。',
+        '感情处于稳定期，适合回顾关系中的美好瞬间，重新点燃初心。',
+        pn?pn+'影响下感情节奏趋于平缓，不必焦虑，静待花开。':'不必急于推进感情进度，自然发展的关系更加持久。',
+        '单身者暂时没有强烈的桃花信号，把精力投入自我成长，魅力自然提升。',
+        '关系中可能出现一些小摩擦，但不影响大局，理性处理即可化解。',
+        '适合与伴侣进行深度交流，了解彼此最近的压力和需求。',
+        '感情上保持平常心，不要过度解读对方的一举一动，信任是最好的定心丸。',
+        '这段时间的感情以平稳为主基调，享受这份安宁也是一种幸福。'
+      ],
+      low:[
+        '感情上可能遇到一些摩擦，需要更多耐心和理解来化解矛盾。',
+        '避免因小事引发争执，学会退一步海阔天空，冷静比争赢更重要。',
+        '感情需要经营，不要把工作或生活的压力无意中转嫁给伴侣。',
+        pn?pn+'的紧张相位给感情带来考验，但考验也是成长的契机。':'感情领域需要额外关注，别让外部压力影响你对感情的判断。',
+        '单身者不宜冲动开始一段新关系，先理清自己内心真正的需求。',
+        '关系中的沟通出现障碍，试着换个方式表达，书信或文字可能比口头更有效。',
+        '可能对感情现状产生不满或倦怠，这是正常的周期波动，不要做冲动的决定。',
+        '与伴侣之间需要重新建立边界感，过度纠缠反而会让关系窒息。',
+        '感情运势处于低谷，但低谷也是反思和调整的最佳时机。',
+        '不要被一时的情绪左右判断，给自己和对方都留一些空间和时间。'
+      ]
     },
     career: {
-      high:['事业运势强劲，工作中容易获得认可和机会。','领导力和执行力都在高位，适合推动重要项目。','职场人际关系顺畅，贵人运佳。'],
-      mid:['工作按部就班推进，稳扎稳打是最好的策略。','保持专注和效率，避免分心于不重要的事务。','职场上保持低调务实，积累实力等待时机。'],
-      low:['工作压力较大，需要合理分配精力和时间。','注意职场沟通，避免因表达不当造成误解。','调整工作节奏，不要强行推进遇到阻力的事务。']
+      high:[
+        '事业运势强劲，工作中容易获得上级认可和晋升机会，大胆展示你的能力。',
+        '领导力和执行力都在高位，适合推动重要项目、争取关键资源。',
+        '职场人际关系顺畅，贵人运佳，有人会在关键时刻拉你一把。',
+        pn?pn+'为你的事业注入强劲动力，这是展现实力的黄金窗口。':'你的专业能力正在被更多人看到，抓住展示自己的机会。',
+        '创意和灵感涌现，适合提出新方案、启动新项目或尝试新方向。',
+        '团队协作效率极高，你的组织能力让同事刮目相看。',
+        '商业谈判和合作洽谈的好时机，你的判断力比平时更加精准。',
+        '职场中的努力开始得到回报，之前播下的种子正在结出果实。',
+        '适合做长期职业规划，你比平时更能看清行业趋势和个人发展方向。',
+        '工作节奏流畅，效率倍增，趁状态好多完成一些积压的重要任务。'
+      ],
+      mid:[
+        '工作按部就班推进，稳扎稳打是当前最好的策略，不宜冒进。',
+        '保持专注和效率，避免分心于不重要的事务，聚焦核心目标。',
+        '职场上保持低调务实，积累实力等待时机，韬光养晦正当时。',
+        pn?pn+'的能量让你保持稳定的工作状态，维持现有节奏即可。':'没有大的波动，正是修炼内功、提升专业技能的好时机。',
+        '注意与同事的沟通方式，尽量用数据和事实说话，减少误解。',
+        '日常工作虽无突破，但持续积累终将在未来某个节点集中兑现。',
+        '适合整理工作流程、优化效率，为下一次机遇做好充分准备。',
+        '上级可能对你有新的要求，保持积极态度，展现可靠的一面。',
+        '职场人际保持平衡，不需要刻意讨好，做好本职就是最好的表现。',
+        '这是沉淀期，看似平静的水面下正在酝酿更大的可能性。'
+      ],
+      low:[
+        '工作压力较大，需要合理分配精力和时间，学会说不和设定边界。',
+        '注意职场沟通，避免因表达不当造成误解，三思而后言。',
+        '调整工作节奏，不要强行推进遇到阻力的事务，迂回也是一种智慧。',
+        pn?pn+'带来的紧张能量影响工作状态，控制情绪是当务之急。':'外部环境可能不太配合，适当降低期望，守住底线。',
+        '可能遇到不公正的待遇或评价，保持专业态度，用成绩来回应质疑。',
+        '团队协作中可能出现分歧，避免站队或卷入办公室政治。',
+        '重要决策不宜在这个时期仓促做出，推迟到状态更好的时候。',
+        '工作中容易出现失误，凡事多检查一遍，细节决定成败。',
+        '如果感到疲惫和无力，允许自己适当放慢脚步，身体才是革命的本钱。',
+        '职业发展暂时遇阻，但阻力往往也是调整方向的信号。'
+      ]
     },
     wealth: {
-      high:['财运亨通，收入和理财都有利好迹象。','适合适度投资和拓展收入渠道。','可能收到意外之财或财务方面的好消息。'],
-      mid:['财务状况平稳，量入为出是明智之举。','理性消费，避免不必要的大额支出。','财运一般，不适合高风险投资。'],
-      low:['财务方面需要特别谨慎，避免冲动消费。','注意防范财务风险，不轻信高收益承诺。','开源节流，为可能的意外支出做好准备。']
+      high:[
+        '财运亨通，收入和理财都有利好迹象，之前的投资可能看到回报。',
+        '适合适度投资和拓展收入渠道，副业或被动收入有新的突破口。',
+        '可能收到意外之财或财务方面的好消息，贵人带财运。',
+        pn?pn+'照耀你的财富领域，金钱能量正在向你聚拢。':'你的财商在这个阶段特别敏锐，直觉投资可能有好结果。',
+        '商业嗅觉灵敏，能够发现别人忽视的赚钱机会，但仍需理性评估。',
+        '正财运旺盛，工作带来的收入会有明显增长或额外奖励。',
+        '适合做财务规划和资产配置，你比平时更能做出明智的理财决策。',
+        '人际关系带来的财务机会值得关注，朋友或同事可能介绍赚钱门路。',
+        '消费与收入的平衡达到理想状态，你的财务健康度在提升。',
+        '投资有望获得正回报，但不宜过于贪心，见好就收是智慧。'
+      ],
+      mid:[
+        '财务状况平稳，量入为出是明智之举，不适合大额投资或投机。',
+        '理性消费，避免不必要的大额支出，把钱花在真正有价值的地方。',
+        '财运一般，不适合高风险投资，稳健型理财产品更适合当前阶段。',
+        pn?pn+'的能量提示你关注长期财务健康，而非短期收益。':'财务上不会有大的波动，维持现有的理财策略即可。',
+        '可能有一些计划外的小额支出，做好预算能让你更从容。',
+        '收入稳定但无惊喜，适合趁此机会审视消费习惯，优化开支结构。',
+        '朋友之间的金钱往来需要谨慎处理，亲兄弟明算账。',
+        '理财知识的学习比急于入市更有长期价值，先武装头脑再行动。',
+        '守住现有的财务成果，不被外界的"暴富"故事所诱惑。',
+        '平稳的财务状态也是一种福气，稳定才是持续增长的基础。'
+      ],
+      low:[
+        '财务方面需要特别谨慎，避免冲动消费和情绪化的投资决策。',
+        '注意防范财务风险，不轻信高收益承诺，天上不会掉馅饼。',
+        '开源节流，为可能的意外支出做好准备，保留充足的应急资金。',
+        pn?pn+'的紧张相位影响财运，这不是冒险的时候，守比攻更重要。':'大环境对财务不太友好，收缩战线是明智之举。',
+        '可能出现突发性的大额支出，提前做好财务缓冲。',
+        '投资标的需要严格筛选，宁可错过也不要做错，止损意识要强。',
+        '不宜借钱给他人或做担保，善意的帮助可能让自己陷入困境。',
+        '检查你的订阅和固定支出，可能有一些不再需要的服务在悄悄吞噬预算。',
+        '财务压力可能影响情绪，记住：困难是暂时的，不要因此做出影响长远的决定。',
+        '财运低谷期也是重新审视金钱观的好时机，弄清什么才是真正的富有。'
+      ]
     },
     health: {
-      high:['身体状态良好，精力充沛。','适合开始新的运动计划或健康习惯。','身心和谐，享受活力满满的状态。'],
-      mid:['健康状况平稳，注意保持规律作息。','适度运动，不要透支体力。','注意饮食均衡，保持良好的生活习惯。'],
-      low:['身体发出的信号需要关注，不要忽视不适感。','注意休息和减压，避免过度劳累。','关注睡眠质量和情绪管理，必要时寻求专业帮助。']
+      high:[
+        '身体状态良好，精力充沛，是挑战新运动项目或健身目标的好时候。',
+        '适合开始新的运动计划或健康习惯，你的身体恢复力比平时更强。',
+        '身心和谐，享受活力满满的状态，适合安排户外活动或短途旅行。',
+        pn?pn+'带来充沛的生命力，趁状态好多做一些平时懒得做的事。':'你的免疫力和精神状态都在高位，好好利用这段黄金期。',
+        '睡眠质量提升，白天注意力更加集中，工作和学习效率都在上升。',
+        '情绪稳定积极，心理能量充足，适合处理之前搁置的棘手问题。',
+        '消化系统运转良好，适合尝试新的饮食方式或食谱。',
+        '身体各项机能协调运作，感恩这份健康，继续保持好习惯。',
+        '运动带来的愉悦感特别明显，多巴胺帮你抵抗压力和消极情绪。',
+        '整体状态处于上升周期，适合做体检或制定长期健康管理计划。'
+      ],
+      mid:[
+        '健康状况平稳，注意保持规律作息，不要打破已经建立的好习惯。',
+        '适度运动，不要透支体力，每天30分钟的散步胜过偶尔的剧烈运动。',
+        '注意饮食均衡，保持良好的生活习惯，少吃加工食品。',
+        pn?pn+'提醒你关注身体的微信号，疲劳感可能比平时来得早一些。':'没有明显的健康问题，但也不要忽视预防和保养。',
+        '眼睛和颈椎需要额外关注，减少屏幕时间，定时做拉伸运动。',
+        '情绪可能有小幅波动，通过规律运动和充足睡眠来调节。',
+        '季节变化可能影响体质，及时增减衣物，预防胜于治疗。',
+        '工作中注意用眼卫生和坐姿，长期的小习惯决定大健康。',
+        '保持每天喝足够的水，这个简单的习惯对身体的影响超乎想象。',
+        '整体健康平稳，不用过度焦虑，维持现有的生活节奏就好。'
+      ],
+      low:[
+        '身体发出的信号需要关注，不要忽视任何持续的不适感。',
+        '注意休息和减压，避免过度劳累，身体是一切的根基。',
+        '关注睡眠质量和情绪管理，必要时寻求专业帮助，不要硬扛。',
+        pn?pn+'的紧张相位影响身心状态，放慢节奏是当务之急。':'身体在提醒你需要调整生活方式，倾听它的声音。',
+        '肠胃和消化系统可能出现不适，饮食宜清淡规律，避免暴饮暴食。',
+        '心理压力可能转化为身体症状，如头痛、失眠或肌肉紧张，需要释放压力。',
+        '抵抗力下降期，注意保暖和卫生，尽量避免出入人员密集的场所。',
+        '运动时注意安全，不宜进行高强度或风险较大的运动项目。',
+        '情绪低落可能拖累身体状态，找一个信任的人倾诉，或者写日记释放内心。',
+        '健康低谷是身体在提醒你重新审视生活方式，痛苦也是变好的开始。'
+      ]
     }
   };
 
@@ -1785,8 +1957,10 @@ function genDimText(dim, score, fortune, signIdx) {
   const level = score >= 70 ? 'high' : score >= 45 ? 'mid' : 'low';
   const arr = pool[level];
 
-  // Use sign index to pick deterministic text
-  return arr[signIdx % arr.length];
+  // Date-seeded selection for daily variation (not just signIdx)
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+  const seed = (signIdx * 31 + dayOfYear * 7 + dim.charCodeAt(0)) % arr.length;
+  return arr[seed];
 }
 
 function renderPowerDays(signIdx, period, now) {
