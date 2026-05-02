@@ -284,6 +284,70 @@ border-right:1px solid var(--glass-border);
 background:rgba(212,175,55,0.15);color:var(--gold);outline:none;
 }
 
+/* Tomorrow forecast: today->tomorrow diff card */
+.tomorrow-diff{
+  background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(100,60,180,0.05));
+  border:1px solid rgba(212,175,55,0.2);
+  border-radius:12px;padding:14px;margin-bottom:16px;
+}
+.tomorrow-diff-title{
+  font-family:'kai',serif;font-size:0.95em;color:var(--gold);
+  letter-spacing:2px;margin-bottom:10px;text-align:center;
+  padding-bottom:8px;border-bottom:1px dashed rgba(212,175,55,0.2);
+}
+.tomorrow-diff-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 0;
+}
+.tomorrow-diff-item:not(:last-child){
+  border-bottom:1px solid rgba(212,175,55,0.06);
+}
+.tomorrow-diff-icon{font-size:1.4em;line-height:1.4;flex-shrink:0;width:24px;text-align:center}
+.tomorrow-diff-body{flex:1;min-width:0}
+.tomorrow-diff-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-bottom:3px;
+}
+.tomorrow-diff-name{
+  font-size:0.85em;color:var(--gold-light);font-weight:bold;
+}
+.tomorrow-diff-detail{
+  font-size:0.78em;color:var(--text-dim);
+  padding:1px 8px;border-radius:8px;
+  background:rgba(212,175,55,0.08);
+}
+.tomorrow-diff-meaning{
+  font-size:0.78em;color:var(--text);line-height:1.6;
+}
+
+/* Tomorrow time-slot guide */
+.time-slot-guide{
+  margin-top:16px;padding:14px;
+  border-radius:12px;
+  background:rgba(212,175,55,0.03);
+  border:1px solid rgba(212,175,55,0.1);
+}
+.time-slot-title{
+  font-family:'kai',serif;font-size:0.95em;color:var(--gold);
+  letter-spacing:2px;margin-bottom:10px;text-align:center;
+}
+.time-slot-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.time-slot-item{
+  padding:10px;border-radius:10px;
+  background:rgba(212,175,55,0.04);
+  border:1px solid rgba(212,175,55,0.08);
+}
+.time-slot-head{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.time-slot-icon{font-size:1.1em}
+.time-slot-label{font-size:0.78em;color:var(--gold-light);font-weight:bold}
+.time-slot-text{font-size:0.78em;color:var(--text-dim);line-height:1.6}
+
+@media(max-width:380px){
+  .time-slot-grid{grid-template-columns:1fr}
+}
+
 /* Fortune content */
 .fortune-overview{
 font-size:0.9em;line-height:2;margin-bottom:16px;
@@ -1602,9 +1666,9 @@ function selectSign(idx) {
       <div class="card-title">运势预测</div>
       <div class="fortune-tabs">
         <div class="fortune-tab active" onclick="switchFortune(this,'today')">今日</div>
+        <div class="fortune-tab" onclick="switchFortune(this,'tomorrow')">明日</div>
         <div class="fortune-tab" onclick="switchFortune(this,'week')">本周${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
         <div class="fortune-tab" onclick="switchFortune(this,'month')">本月${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
-        <div class="fortune-tab" onclick="switchFortune(this,'quarter')">本季${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
         <div class="fortune-tab" onclick="switchFortune(this,'year')">本年${isPaid?'':'<span class="lock-icon">\uD83D\uDD12</span>'}</div>
       </div>
       <div id="fortuneContent"></div>
@@ -1648,13 +1712,190 @@ function switchFortune(el, period) {
   renderFortune(period);
 }
 
+// ============================================================
+// TOMORROW FORECAST HELPERS (Robert Hand transit + Llewellyn style)
+// ============================================================
+const MOON_SIGN_THEMES = {
+  0:'行动与冲劲',1:'身体与稳定',2:'沟通与好奇',
+  3:'家与情感安全',4:'表达与光彩',5:'细节与服务',
+  6:'关系与平衡',7:'深度与真相',8:'远方与意义',
+  9:'责任与成就',10:'朋友与愿景',11:'梦境与共情'
+};
+
+// Detect meaningful changes between today and tomorrow
+function genTomorrowChanges(signIdx, todayDate, tomorrowDate) {
+  const todayF = calcFortune(signIdx, todayDate);
+  const tomorrowF = calcFortune(signIdx, tomorrowDate);
+  const changes = [];
+
+  const tm = todayF.transits.find(t => t.planet === 'moon');
+  const nm = tomorrowF.transits.find(t => t.planet === 'moon');
+  if (tm && nm && tm.sign !== nm.sign) {
+    changes.push({
+      icon: '🌙',
+      title: '月亮换座',
+      detail: SIGNS[tm.sign] + ' → ' + SIGNS[nm.sign],
+      meaning: '情绪焦点从「' + MOON_SIGN_THEMES[tm.sign] + '」转向「' + MOON_SIGN_THEMES[nm.sign] + '」'
+    });
+  } else if (nm) {
+    changes.push({
+      icon: '🌛',
+      title: '月亮延续',
+      detail: '仍在' + SIGNS[nm.sign],
+      meaning: '今日的情绪节奏会自然延续到明日，主题相同但更深一层'
+    });
+  }
+
+  const dScore = tomorrowF.score - todayF.score;
+  if (Math.abs(dScore) >= 4) {
+    changes.push({
+      icon: dScore > 0 ? '📈' : '📉',
+      title: '运势变化',
+      detail: todayF.score + '分 → ' + tomorrowF.score + '分',
+      meaning: dScore > 0 ? '能量上扬 ' + dScore + ' 分，可顺势推进' : '能量回落 ' + Math.abs(dScore) + ' 分，宜调整节奏'
+    });
+  }
+
+  const todayKeys = new Set(todayF.aspects.map(a => a.planet + a.type));
+  const newAspects = tomorrowF.aspects.filter(a => !todayKeys.has(a.planet + a.type));
+  if (newAspects.length > 0) {
+    const a = newAspects[0];
+    changes.push({
+      icon: '✨',
+      title: '新相位形成',
+      detail: PLANET_NAMES[a.planet] + a.name,
+      meaning: a.score > 0 ? '新的支持能量到来，明日是承接今日势能的关键' : '新的考验呈现，明日需要带觉知应对'
+    });
+  } else {
+    const tomorrowKeys = new Set(tomorrowF.aspects.map(a => a.planet + a.type));
+    const fading = todayF.aspects.filter(a => !tomorrowKeys.has(a.planet + a.type));
+    if (fading.length > 0) {
+      const a = fading[0];
+      changes.push({
+        icon: '💫',
+        title: '相位出度',
+        detail: PLANET_NAMES[a.planet] + a.name + '远离精确',
+        meaning: a.score > 0 ? '今日的势能余波渐散，留意把握尾声' : '今日的紧张正在松开，明日会感觉轻松一些'
+      });
+    }
+  }
+
+  const todayRetro = new Set(todayF.transits.filter(t => t.retro).map(t => t.planet));
+  const tomorrowRetro = new Set(tomorrowF.transits.filter(t => t.retro).map(t => t.planet));
+  for (const p of [...tomorrowRetro].filter(x => !todayRetro.has(x))) {
+    changes.push({
+      icon: '⚠️',
+      title: '行星转逆',
+      detail: PLANET_NAMES[p] + '开始逆行',
+      meaning: PLANET_NAMES[p] + '相关领域从明日起需要回顾、修正、慢下来'
+    });
+  }
+  for (const p of [...todayRetro].filter(x => !tomorrowRetro.has(x))) {
+    changes.push({
+      icon: '✅',
+      title: '行星转顺',
+      detail: PLANET_NAMES[p] + '恢复顺行',
+      meaning: PLANET_NAMES[p] + '相关领域停滞的事务可以重新推进'
+    });
+  }
+
+  return { changes, todayF, tomorrowF };
+}
+
+// Forecast-style overview specifically for tomorrow
+function genTomorrowOverview(tomorrowF, signIdx) {
+  const parts = [];
+  const moon = tomorrowF.transits.find(t => t.planet === 'moon');
+  const sun  = tomorrowF.transits.find(t => t.planet === 'sun');
+
+  if (moon) {
+    parts.push('明日月亮在' + SIGNS[moon.sign] + '第' + moon.house + '宫，' + MOON_SIGN_THEMES[moon.sign] + '将成为明日的情绪主线。');
+  }
+
+  if (sun && [1,5,7,9,10].includes(sun.house)) {
+    const sunHints = {
+      1:'自我感会被点亮，适合主动表态、被看见',
+      5:'创造力与表达欲提升，谈恋爱、做作品的好时机',
+      7:'关系议题成为焦点，合作与伙伴中能看见自己',
+      9:'远方与意义的呼唤变强，适合读书、学习、规划远行',
+      10:'事业舞台的灯光更亮一点，适合汇报、面试、公开表态'
+    };
+    parts.push('明日太阳照在你的第' + sun.house + '宫，' + sunHints[sun.house] + '。');
+  }
+
+  const goodAsp = tomorrowF.aspects.filter(a => a.score > 0);
+  const badAsp = tomorrowF.aspects.filter(a => a.score < 0);
+  if (goodAsp.length >= 2) {
+    parts.push('多个和谐相位汇聚，明日宇宙在邀请你顺势而为，把今天搁置的事推进一步。');
+  } else if (goodAsp.length === 1) {
+    const a = goodAsp[0];
+    const benefitHints = {
+      venus:'关系与情感的能量被加成',
+      moon:'直觉与同理能力变得敏锐',
+      jupiter:'机会与扩展的窗口打开',
+      sun:'行动力与自信被点亮',
+      mercury:'表达与思维变得清晰'
+    };
+    parts.push('明日' + PLANET_NAMES[a.planet] + a.name + '到位，' + (benefitHints[a.planet] || '一股温柔的支持能量到来') + '。');
+  }
+  if (badAsp.length > 0) {
+    const a = badAsp[0];
+    const challengeHints = {
+      mars:'小心情绪上头，留 10 分钟先冷静再表态',
+      saturn:'会有一阵沉重感，但这是看清结构的时刻',
+      pluto:'深层的议题被翻起，不必急着解决',
+      uranus:'有意外变动，给日程留 20% 弹性',
+      neptune:'边界变模糊，重要决定推迟一天'
+    };
+    parts.push('明日' + PLANET_NAMES[a.planet] + a.name + '形成考验，' + (challengeHints[a.planet] || '建议给自己留缓冲，不必硬推') + '。');
+  }
+
+  const retro = tomorrowF.transits.filter(t => t.retro);
+  if (retro.some(t => t.planet === 'mercury')) {
+    parts.push('明日水星仍在逆行，「再」字开头的事最顺：再确认、再回访、再修订；不宜启动全新项目。');
+  } else if (retro.length > 0) {
+    parts.push(retro.map(t => PLANET_NAMES[t.planet]).join('、') + '逆行中，相关领域明日适合复盘而非冲刺。');
+  }
+
+  parts.push('明日不必等到完美时机，宇宙已经把它能给的能量摆在那儿，你的功课是看见它、用好它。');
+  return parts.join('');
+}
+
+// Tomorrow's 4-time-slot guide (morning/noon/evening/night)
+function genTimeSlotGuide(tomorrowF, signIdx) {
+  const score = tomorrowF.score;
+  const lvl = score >= 70 ? 'high' : score >= 50 ? 'mid' : 'low';
+  const morning = {
+    high:'清晨思路清亮，把「一直没敢做」的那件事放在上午第一小时。',
+    mid:'清晨适合处理需要专注的细活，重要邮件、报告留在这两小时。',
+    low:'清晨不宜冲——先喝杯水、读 5 分钟书，别立刻打开工作群。'
+  }[lvl];
+  const noon = {
+    high:'中午人际能量旺，约一顿饭、谈一件正事，主动开口必有回响。',
+    mid:'中午适合协调与对接，把上午积累的疑问当面问清。',
+    low:'中午多听少说，那个让你不舒服的话题，今天不开口最稳。'
+  }[lvl];
+  const evening = {
+    high:'傍晚月色转柔，是写、是聊、是约——做一件让自己心动的小事。',
+    mid:'傍晚适合复盘一天，写下三件做对的、一件想改进的。',
+    low:'傍晚情绪可能起伏，避免在这段时间下重大决定，等过了夜再说。'
+  }[lvl];
+  const night = {
+    high:'夜晚精神尚足，可读一本久违的书或与亲近的人深谈一小时。',
+    mid:'夜晚早些放下手机，允许身体在 11 点前真正「下班」。',
+    low:'夜晚需要修复，不刷剧、不刷手机，今晚的睡眠值百万。'
+  }[lvl];
+  return { morning, noon, evening, night };
+}
+
+
 function renderFortune(period) {
   if (currentSign === null) return;
   const container = document.getElementById('fortuneContent');
   if (!container) return;
 
   // Paywall: free users only get daily fortune
-  if (!isPaid && period !== 'today') {
+  if (!isPaid && !['today','tomorrow'].includes(period)) {
     container.innerHTML = `
       <div class="paywall-wrap" style="min-height:300px">
         <div class="paywall-blur">
@@ -1671,14 +1912,14 @@ function renderFortune(period) {
         </div>
         <div class="paywall-overlay">
           <div class="paywall-icon">🔮</div>
-          <div class="paywall-text">解锁完整运势深度解读<br>本周 · 本月 · 本季 · 全年</div>
+          <div class="paywall-text">解锁完整运势深度解读<br>本周 · 本月 · 全年</div>
           <div class="paywall-sub">基于真实行星过境的专业分析</div>
           <div style="margin:12px 0;padding:10px 20px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:10px;text-align:center">
             <div style="color:#FFD700;font-size:1.05em;font-weight:bold;letter-spacing:2px;margin-bottom:4px">仅需一次付费 ¥9.99</div>
-            <div style="color:var(--text-dim);font-size:0.85em;line-height:1.6">即可解锁本周+本月+本季+全年<br>所有时段运势，不再另外收费</div>
+            <div style="color:var(--text-dim);font-size:0.85em;line-height:1.6">即可解锁本周+本月+全年<br>所有时段运势，不再另外收费</div>
           </div>
           <a class="paywall-btn" href="/site/horoscope" onclick="if(window.top!==window.self){window.top.location.href='/site/horoscope';return false;}">💳 微信付款 ¥9.99</a>
-          <div class="paywall-price">一次购买 · 四个时段全部解锁</div>
+          <div class="paywall-price">一次购买 · 三个时段全部解锁</div>
           <div style="margin-top:12px;font-size:0.85em;color:var(--text-dim)">已有密钥？<a href="/site/horoscope" onclick="if(window.top!==window.self){window.top.location.href='/site/horoscope';return false;}" style="color:var(--gold-dim)">点击输入</a></div>
         </div>
       </div>`;
@@ -1689,16 +1930,15 @@ function renderFortune(period) {
   let date = now;
   let periodLabel = '今日';
 
-  // For longer periods, use midpoint
-  if (period === 'week') {
+  // 明日: noon tomorrow (gives full day's planetary state, captures moon sign change)
+  if (period === 'tomorrow') {
+    date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0);
+    periodLabel = '明日';
+  } else if (period === 'week') {
     periodLabel = '本周';
   } else if (period === 'month') {
     date = new Date(now.getFullYear(), now.getMonth(), 15);
     periodLabel = '本月';
-  } else if (period === 'quarter') {
-    const qm = Math.floor(now.getMonth() / 3) * 3 + 1;
-    date = new Date(now.getFullYear(), qm, 15);
-    periodLabel = '本季度';
   } else if (period === 'year') {
     date = new Date(now.getFullYear(), 6, 1);
     periodLabel = '本年';
@@ -1706,37 +1946,38 @@ function renderFortune(period) {
 
   const fortune = calcFortune(currentSign, date);
   const dims = calcDimensions(fortune, currentSign);
-  const lucky = genLucky(fortune, currentSign, now);
+  const lucky = genLucky(fortune, currentSign, date);
   const level = fortuneLevel(fortune.score);
   const transitTexts = genTransitText(fortune, SIGN_KEYS[currentSign]);
 
   // Build overview text
   const data = ZODIAC_DATA[SIGN_KEYS[currentSign]];
-  let overviewParts = [];
+  let overview;
+  let tomorrowChangesData = null;
 
-  // Main transit descriptions
-  overviewParts = transitTexts.slice(0, 3);
-
-  // Add retrograde warnings
-  const retroPlanets = fortune.transits.filter(t => t.retro);
-  if (retroPlanets.length > 0) {
-    const retroNames = retroPlanets.map(t => PLANET_NAMES[t.planet]).join('、');
-    overviewParts.push(`${retroNames}正在逆行，需要特别注意反思和回顾，避免在这些领域做出仓促的决定。`);
+  if (period === 'tomorrow') {
+    // Tomorrow uses forecast-style overview + changes diff vs today
+    overview = genTomorrowOverview(fortune, currentSign);
+    tomorrowChangesData = genTomorrowChanges(currentSign, now, date);
+  } else {
+    let overviewParts = transitTexts.slice(0, 3);
+    const retroPlanets = fortune.transits.filter(t => t.retro);
+    if (retroPlanets.length > 0) {
+      const retroNames = retroPlanets.map(t => PLANET_NAMES[t.planet]).join('、');
+      overviewParts.push(`${retroNames}正在逆行，需要特别注意反思和回顾，避免在这些领域做出仓促的决定。`);
+    }
+    const goodAspects = fortune.aspects.filter(a => a.score > 0);
+    const badAspects = fortune.aspects.filter(a => a.score < 0);
+    if (goodAspects.length > 0) {
+      const gNames = goodAspects.slice(0,2).map(a => `${PLANET_NAMES[a.planet]}${a.name}`).join('、');
+      overviewParts.push(`${gNames}带来积极的能量支持，抓住机遇顺势而为。`);
+    }
+    if (badAspects.length > 0) {
+      const bNames = badAspects.slice(0,2).map(a => `${PLANET_NAMES[a.planet]}${a.name}`).join('、');
+      overviewParts.push(`${bNames}带来一定的挑战，需要耐心和智慧来应对。`);
+    }
+    overview = overviewParts.join('');
   }
-
-  // Aspect highlights
-  const goodAspects = fortune.aspects.filter(a => a.score > 0);
-  const badAspects = fortune.aspects.filter(a => a.score < 0);
-  if (goodAspects.length > 0) {
-    const gNames = goodAspects.slice(0,2).map(a => `${PLANET_NAMES[a.planet]}${a.name}`).join('、');
-    overviewParts.push(`${gNames}带来积极的能量支持，抓住机遇顺势而为。`);
-  }
-  if (badAspects.length > 0) {
-    const bNames = badAspects.slice(0,2).map(a => `${PLANET_NAMES[a.planet]}${a.name}`).join('、');
-    overviewParts.push(`${bNames}带来一定的挑战，需要耐心和智慧来应对。`);
-  }
-
-  const overview = overviewParts.join('');
 
   // Dimension descriptions
   const dimDescs = {
@@ -1746,12 +1987,32 @@ function renderFortune(period) {
     health: genDimText('health', dims.health, fortune, currentSign)
   };
 
+  // Tomorrow-specific: changes diff card
+  let changesHtml = '';
+  if (period === 'tomorrow' && tomorrowChangesData && tomorrowChangesData.changes.length > 0) {
+    changesHtml = `
+    <div class="tomorrow-diff">
+      <div class="tomorrow-diff-title">今日 → 明日 关键变化</div>
+      ${tomorrowChangesData.changes.map(c => `
+        <div class="tomorrow-diff-item">
+          <span class="tomorrow-diff-icon">${c.icon}</span>
+          <div class="tomorrow-diff-body">
+            <div class="tomorrow-diff-head"><span class="tomorrow-diff-name">${c.title}</span><span class="tomorrow-diff-detail">${c.detail}</span></div>
+            <div class="tomorrow-diff-meaning">${c.meaning}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
   let html = `
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:2.5em;color:${level.color}">${'★'.repeat(level.stars)}${'☆'.repeat(5-level.stars)}</div>
       <div style="font-size:1.3em;color:${level.color};font-family:'kai',serif">${periodLabel}综合运势: ${level.level}</div>
       <div style="font-size:0.85em;color:var(--text-dim);margin-top:4px">综合评分: ${fortune.score}/100</div>
     </div>
+
+    ${changesHtml}
 
     <div class="fortune-overview">${overview}</div>
 
@@ -1787,6 +2048,21 @@ function renderFortune(period) {
   // Power days for week/month
   if (period === 'week' || period === 'month') {
     html += renderPowerDays(currentSign, period, now);
+  }
+
+  // Tomorrow time-slot guide (Llewellyn-style 4-segment advice)
+  if (period === 'tomorrow') {
+    const tg = genTimeSlotGuide(fortune, currentSign);
+    html += `
+    <div class="time-slot-guide">
+      <div class="time-slot-title">明日时辰指引</div>
+      <div class="time-slot-grid">
+        <div class="time-slot-item"><div class="time-slot-head"><span class="time-slot-icon">🌅</span><span class="time-slot-label">清晨 6–11点</span></div><div class="time-slot-text">${tg.morning}</div></div>
+        <div class="time-slot-item"><div class="time-slot-head"><span class="time-slot-icon">☀️</span><span class="time-slot-label">中午 11–14点</span></div><div class="time-slot-text">${tg.noon}</div></div>
+        <div class="time-slot-item"><div class="time-slot-head"><span class="time-slot-icon">🌆</span><span class="time-slot-label">傍晚 17–20点</span></div><div class="time-slot-text">${tg.evening}</div></div>
+        <div class="time-slot-item"><div class="time-slot-head"><span class="time-slot-icon">🌙</span><span class="time-slot-label">夜晚 20点后</span></div><div class="time-slot-text">${tg.night}</div></div>
+      </div>
+    </div>`;
   }
 
   container.innerHTML = html;
