@@ -1674,7 +1674,91 @@ function selectSign(idx) {
       <div id="fortuneContent"></div>
     </div>`;
 
-  detail.innerHTML = profileHtml + personaHtml + soulHtml + compatHtml + fortuneHtml;
+  // ============================================================
+  // ============= v2.0 六板块速读版（星座白话版）================
+  // ============================================================
+  const _ZODIAC_QUICK = {
+    aries: {tag:'你是黄道上的"婴儿"——勇敢、直率,要什么就要什么,但容易冲过头。',problem:'三分钟热度+脾气来得快去得快,常因冲动后悔。',advice:['出手前等 10 分钟,问"我是真想要还是上头"','学会说"刚才太冲了对不起",不丢人']},
+    taurus: {tag:'你是直布罗陀巨岩——沉默、稳固,认准的事死也不放。',problem:'太顽固,该止损还在死扛(感情/工作/股票一样)。',advice:['每年设一个"主动断舍离日"','别人提建议先听完再反驳']},
+    gemini: {tag:'你是黄道的柴郡猫——脑子转得飞快,但坐不住。',problem:'什么都浅尝辄止,简历技能多但没一个精。',advice:['挑 1 件事死磕 3 年','停止"什么群都加",社交质量比数量重要']},
+    cancer: {tag:'你跟月相同步——情绪起伏剧烈,直觉精准。',problem:'玻璃心+记仇,无心一句话能让你难受三天。',advice:['难受先吃口热的,80% 是身体冷+饿','别人没回消息别瞎想,直接问"在忙吗"']},
+    leo: {tag:'你想发光,被忽视就掉脸。',problem:'太爱面子,被批评下不来台能记一辈子。',advice:['被批评先听别立刻反驳,90% 批评有 30% 是对的','量入为出,真朋友不在乎你点几个菜']},
+    virgo: {tag:'你对自己和别人都太苛刻,小事能想三天。',problem:'焦虑型完美主义,做啥都不舒服。',advice:['每天留 2 小时"允许做不好的时间"','60 分先交付再优化,卡点是动手太慢']},
+    libra: {tag:'你必须有伴才完整,选择困难+怕得罪人。',problem:'反复纠结到错过最佳时机。',advice:['小决定 30 秒内必须拍板,99% 犹豫无意义','学会说"不",你不是慈善机构']},
+    scorpio: {tag:'你不会浅爱也不会浅恨,直觉精准。',problem:'控制欲强+极度记仇,能恨十年自己也走不出。',advice:['屏蔽前任/仇人所有联系方式,是救命','深度感受可以,但每天最多 30 分钟自我消化']},
+    sagittarius: {tag:'你乐观乐于冒险,想去全世界。',problem:'嘴上没把门、答应的事三天就忘。',advice:['重要话先在心里走一遍再说','答应的事立刻记日历设提醒']},
+    capricorn: {tag:'你脚踏实地,把责任看得比命重。',problem:'30 岁前把自己活成 50 岁,情绪憋出问题。',advice:['每周必须有一天啥正事不干,纯休息','学会向亲近的人吐槽,你不是机器']},
+    aquarius: {tag:'你思考超前,叛逆+冷静。',problem:'嘴上不在乎其实超在乎,感情上特别冷漠。',advice:['承认你也需要被认同,不丢人','对家人和伴侣多用感性表达']},
+    pisces: {tag:'你共情爆表,谁都心疼谁都帮。',problem:'边界模糊,被人当工具人,自己却没人疼。',advice:['学会说"这是你的事我帮不了",是救命','每天留 1 小时彻底为自己']}
+  };
+  const _ELEMENT_HINT = {
+    fire:{wuxing:'火相 + '+data.quality+'宫,你像点燃的火炬,需要持续燃料(目标/挑战/认可)。',problem:'火不烧自己时就要烧别人,要给火找出口。',advice:['每天必须有 1 件"被看见"的事,不一定大','发泄型运动(跑/拳击/HIIT)比静态项目适合你']},
+    earth:{wuxing:'土相 + '+data.quality+'宫,你像稳固的土地,需要慢炖式生活。',problem:'容易沉迷物质和习惯,失去新鲜感。',advice:['每三个月问"如果今天才认识这事,我还会选吗"','囤货前问"3 个月能用完吗"']},
+    air:{wuxing:'风相 + '+data.quality+'宫,你像四处吹的风,信息处理快但坐不住。',problem:'容易焦虑(怕错过)+空虚(没积累)。',advice:['手机设专注时段,每天 2 小时不看消息','写日记或做笔记,把信息消化成能力']},
+    water:{wuxing:'水相 + '+data.quality+'宫,你像情绪的海,共情爆表但容易被淹没。',problem:'吸收周围人情绪,把自己耗空了还没人懂。',advice:['每天独处 1 小时,给情绪找排水口','远离消耗你的人,你太容易吸收别人情绪']}
+  };
+  const _quick = _ZODIAC_QUICK[key];
+  const _eleHint = _ELEMENT_HINT[data.element] || _ELEMENT_HINT.fire;
+  const _todayFortune = (typeof calcFortune === 'function') ? calcFortune(currentSign, new Date()) : null;
+  const _todayScore = _todayFortune ? _todayFortune.score : 75;
+  const _scoreHint = _todayScore >= 80 ? '今日运势偏好,适合主动出击' : _todayScore >= 65 ? '今日运势平稳,稳中求进' : _todayScore >= 50 ? '今日运势一般,守住别折腾' : '今日运势偏低,沉稳应对';
+
+  function _zb6(emoji, idx, title, tagline, problem, advice) {
+    let hh = '<div class="card fade-in" style="animation-delay:'+(idx*0.05)+'s">';
+    hh += '<div class="card-title"><span class="sec-icon">'+emoji+'</span> '+idx+'. '+title+'</div>';
+    hh += '<div style="padding:14px 18px">';
+    hh += '<div style="font-family:kai,serif;font-size:1.05em;color:var(--gold);margin-bottom:14px;line-height:1.7;border-bottom:1px dashed rgba(212,175,55,0.2);padding-bottom:12px">「'+tagline+'」</div>';
+    hh += '<div style="margin:12px 0"><div style="display:inline-block;padding:3px 10px;background:rgba(231,76,60,0.18);color:#e74c3c;border-radius:4px;font-size:0.82em;margin-bottom:6px">⚠ 最容易卡住的地方</div><div style="line-height:1.85;font-size:0.95em">'+problem+'</div></div>';
+    hh += '<div style="margin:14px 0 4px"><div style="display:inline-block;padding:3px 10px;background:rgba(46,204,113,0.18);color:#2ecc71;border-radius:4px;font-size:0.82em;margin-bottom:6px">✓ 给你的建议</div></div>';
+    hh += '<ol style="padding-left:20px;line-height:1.95;font-size:0.95em">'+advice.map(a=>'<li style="margin-bottom:5px">'+a+'</li>').join('')+'</ol>';
+    hh += '</div></div>';
+    return hh;
+  }
+
+  // 6 板块速读版 HTML
+  let simpleHtml = '<div class="card fade-in" style="background:linear-gradient(180deg,rgba(212,175,55,0.10),rgba(212,175,55,0.02));text-align:center;padding:22px 18px">';
+  simpleHtml += '<div style="color:var(--text-dim);font-size:0.88em;margin-bottom:6px">'+data.symbol+' '+data.name+' · '+data.dates+'</div>';
+  simpleHtml += '<div style="font-size:1.8em;font-family:kai,serif;color:var(--gold);font-weight:bold">'+_quick.tag.split('——')[0]+'</div>';
+  simpleHtml += '<div style="margin-top:8px;color:var(--gold-dim);font-size:0.88em">今日运势 '+_todayScore+' 分 · '+_scoreHint+'</div>';
+  simpleHtml += '</div>';
+  simpleHtml += '<div class="card fade-in" style="background:rgba(212,175,55,0.06);border-left:3px solid var(--gold);padding:12px 16px">';
+  simpleHtml += '<div style="color:var(--gold);font-weight:bold;font-size:0.95em;margin-bottom:4px">📜 星座速读 · 6 大板块</div>';
+  simpleHtml += '<div style="color:var(--text-dim);font-size:0.83em;line-height:1.6">下方先看 6 板块速读(总体/能量/事业/财运/爱情/健康),再看下面的"深度人格解析""灵魂使命""星座配对""运势预测"完整版。</div>';
+  simpleHtml += '</div>';
+
+  simpleHtml += _zb6('🧭', 1, '总体', _quick.tag, _quick.problem, _quick.advice);
+  simpleHtml += _zb6('☯', 2, '元素能量', _eleHint.wuxing, _eleHint.problem, _eleHint.advice);
+
+  // 事业 - 从 careerMoney 摘取
+  const _career = data.careerMoney || '';
+  const _careerCore = _career.split('\n').filter(p=>p.trim()).slice(0,1).join(' ').substring(0,180);
+  simpleHtml += _zb6('🎯', 3, '事业',
+    _careerCore || '你在事业上有自己的节奏。',
+    '你最容易踩的事业坑:'+(_career.indexOf('权威')>=0?'跟权威/规则起冲突':_career.indexOf('耐心')>=0?'耐心不够、半途而废':_career.indexOf('面子')>=0?'为面子不够灵活':'容易让情绪干扰判断'),
+    [data.element==='fire'?'当不了头的位子别坐,你需要主导权':data.element==='earth'?'稳扎稳打,看准夕阳行业要早跳':data.element==='air'?'跳槽别太勤,30 岁前要有代表作':'选你能用感受力的工作,不要硬数据型岗位']);
+
+  // 财运
+  const _money = _career;
+  simpleHtml += _zb6('💰', 4, '财运',
+    data.element==='fire'?'钱来自影响力和敢拼':data.element==='earth'?'钱来自长期积累和不动产':data.element==='air'?'钱来自信息差和多平台':'钱来自服务他人和细水长流',
+    data.element==='fire'?'冲动消费严重,挣多少花多少':data.element==='earth'?'存得住但太节俭,享受不够':data.element==='air'?'钱分散到 50 笔小额,不知道花哪了':'对钱没概念,容易借给别人不还、容易被骗',
+    [data.element==='fire'?'开张"碰不到的卡",发工资自动转 30%':data.element==='earth'?'每月留 10% "开心钱"必须花掉,别全存':data.element==='air'?'用记账 App,每周看一次"小钱黑洞"':'让靠谱家人帮你管大钱,你只留日常零花',
+     '今日 '+_todayScore+' 分,'+(_todayScore>=70?'适合谈薪/签合同':_todayScore>=50?'稳健消费别冲动':'别动钱,别签字')]);
+
+  // 爱情
+  const _love = data.loveStyle || '';
+  simpleHtml += _zb6('💕', 5, '爱情',
+    _love.split('\n').filter(p=>p.trim()).slice(0,1).join(' ').substring(0,180) || '你在感情中有自己独特的方式。',
+    '你最容易踩的感情坑:'+(_love.indexOf('占有')>=0?'占有欲强容易把人逼走':_love.indexOf('自由')>=0?'要太多自由让对方没安全感':_love.indexOf('完美')>=0?'追求完美错过现实的好人':'用付出绑住对方,然后一肚子委屈'),
+    data.element==='fire'?['吵架别说"分手",80% 第二天后悔','找能跟你一起跑跳的人,别选闷型']:data.element==='earth'?['对方手机别查,占有欲只能向内消化','别用"我为你花了多少"道德绑架']:data.element==='air'?['别一次撩三个,玩火早晚自焚','给伴侣每周一次"深聊时间",别让关系变室友']:['停止"我都为你做了 XX 还不感动"','付出别算账,算账就是负担']);
+
+  // 健康
+  simpleHtml += _zb6('❤', 6, '健康',
+    data.element==='fire'?'弱点头部、眼睛、血压':data.element==='earth'?'弱点喉咙、甲状腺、颈椎、体重':data.element==='air'?'弱点肺、气管、神经、手腕':'弱点脚、淋巴、免疫、心理',
+    data.element==='fire'?'加班头疼、长期火气大、眼底充血、动不动磕碰':data.element==='earth'?'爱吃+不动 = 中年发福、三高、颈椎僵':data.element==='air'?'熬夜刷手机熬出咳嗽、颈椎、鼠标手、焦虑失眠':'容易抑郁焦虑、过敏、睡得多但醒来更累',
+    data.element==='fire'?['每天必须喝够水+睡足 7 小时','运动选发汗的(跑步/HIIT/拳击),少做静态']:data.element==='earth'?['饭量减 1/4,饭后散步 20 分钟','嗓子不舒服别硬撑,熬夜+辛辣会反复发炎']:data.element==='air'?['戒烟戒电子烟,你这肺扛不住','睡前 1 小时不看手机,白噪音助眠']:['酒不要碰,代谢扛不住容易上瘾','有情绪问题尽早找心理咨询,别拖']);
+
+  detail.innerHTML = simpleHtml + profileHtml + personaHtml + soulHtml + compatHtml + fortuneHtml;
   detail.classList.add('visible');
 
   // Initialize personality content
