@@ -1750,20 +1750,20 @@ function selectSign(idx) {
   simpleHtml += '<div style="color:var(--text-dim);font-size:0.83em;line-height:1.6">下方先看 6 板块速读(总体/能量/事业/财运/爱情/健康),再看下面的"深度人格解析""灵魂使命""星座配对""运势预测"完整版。</div>';
   simpleHtml += '</div>';
 
-  simpleHtml += _zb6('🧭', 1, '总体', _quick.tag, _quick.problem, _quick.advice);
+  simpleHtml += _zb6('🧭', 1, '总体定位', _quick.tag, _quick.problem, _quick.advice);
   simpleHtml += _zb6('☯', 2, '元素能量', _eleHint.wuxing, _eleHint.problem, _eleHint.advice);
 
   // 事业 - 从 careerMoney 摘取
   const _career = data.careerMoney || '';
   const _careerCore = _career.split('\n').filter(p=>p.trim()).slice(0,1).join(' ').substring(0,180);
-  simpleHtml += _zb6('🎯', 3, '事业',
+  simpleHtml += _zb6('🎯', 3, '事业方向',
     _careerCore || '你在事业上有自己的节奏。',
     '你最容易踩的事业坑:'+(_career.indexOf('权威')>=0?'跟权威/规则起冲突':_career.indexOf('耐心')>=0?'耐心不够、半途而废':_career.indexOf('面子')>=0?'为面子不够灵活':'容易让情绪干扰判断'),
     [data.element==='fire'?'当不了头的位子别坐,你需要主导权':data.element==='earth'?'稳扎稳打,看准夕阳行业要早跳':data.element==='air'?'跳槽别太勤,30 岁前要有代表作':'选你能用感受力的工作,不要硬数据型岗位']);
 
   // 财运
   const _money = _career;
-  simpleHtml += _zb6('💰', 4, '财运',
+  simpleHtml += _zb6('💰', 4, '财运格局',
     data.element==='fire'?'钱来自影响力和敢拼':data.element==='earth'?'钱来自长期积累和不动产':data.element==='air'?'钱来自信息差和多平台':'钱来自服务他人和细水长流',
     data.element==='fire'?'冲动消费严重,挣多少花多少':data.element==='earth'?'存得住但太节俭,享受不够':data.element==='air'?'钱分散到 50 笔小额,不知道花哪了':'对钱没概念,容易借给别人不还、容易被骗',
     [data.element==='fire'?'开张"碰不到的卡",发工资自动转 30%':data.element==='earth'?'每月留 10% "开心钱"必须花掉,别全存':data.element==='air'?'用记账 App,每周看一次"小钱黑洞"':'让靠谱家人帮你管大钱,你只留日常零花',
@@ -1771,13 +1771,13 @@ function selectSign(idx) {
 
   // 爱情
   const _love = data.loveStyle || '';
-  simpleHtml += _zb6('💕', 5, '爱情',
+  simpleHtml += _zb6('💕', 5, '爱情模式',
     _love.split('\n').filter(p=>p.trim()).slice(0,1).join(' ').substring(0,180) || '你在感情中有自己独特的方式。',
     '你最容易踩的感情坑:'+(_love.indexOf('占有')>=0?'占有欲强容易把人逼走':_love.indexOf('自由')>=0?'要太多自由让对方没安全感':_love.indexOf('完美')>=0?'追求完美错过现实的好人':'用付出绑住对方,然后一肚子委屈'),
     data.element==='fire'?['吵架别说"分手",80% 第二天后悔','找能跟你一起跑跳的人,别选闷型']:data.element==='earth'?['对方手机别查,占有欲只能向内消化','别用"我为你花了多少"道德绑架']:data.element==='air'?['别一次撩三个,玩火早晚自焚','给伴侣每周一次"深聊时间",别让关系变室友']:['停止"我都为你做了 XX 还不感动"','付出别算账,算账就是负担']);
 
   // 健康
-  simpleHtml += _zb6('❤', 6, '健康',
+  simpleHtml += _zb6('❤', 6, '健康保养',
     data.element==='fire'?'弱点头部、眼睛、血压':data.element==='earth'?'弱点喉咙、甲状腺、颈椎、体重':data.element==='air'?'弱点肺、气管、神经、手腕':'弱点脚、淋巴、免疫、心理',
     data.element==='fire'?'加班头疼、长期火气大、眼底充血、动不动磕碰':data.element==='earth'?'爱吃+不动 = 中年发福、三高、颈椎僵':data.element==='air'?'熬夜刷手机熬出咳嗽、颈椎、鼠标手、焦虑失眠':'容易抑郁焦虑、过敏、睡得多但醒来更累',
     data.element==='fire'?['每天必须喝够水+睡足 7 小时','运动选发汗的(跑步/HIIT/拳击),少做静态']:data.element==='earth'?['饭量减 1/4,饭后散步 20 分钟','嗓子不舒服别硬撑,熬夜+辛辣会反复发炎']:data.element==='air'?['戒烟戒电子烟,你这肺扛不住','睡前 1 小时不看手机,白噪音助眠']:['酒不要碰,代谢扛不住容易上瘾','有情绪问题尽早找心理咨询,别拖']);
