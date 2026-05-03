@@ -441,7 +441,10 @@ to{opacity:1;transform:translateY(0)}
 .paywall-price{margin-top:8px;font-size:0.8em;color:var(--text-dim)}
 .paywall-price b{color:#FFD700;font-size:1.4em}
 .fortune-tab .lock-icon{font-size:0.7em;margin-left:2px;opacity:0.7}
-
+.cross-cta a{transition:all .25s ease}
+.cross-cta a:hover{transform:translateY(-3px);background:rgba(212,175,55,0.15) !important;box-shadow:0 6px 18px rgba(212,175,55,0.18);border-color:rgba(212,175,55,0.4) !important}
+@media(max-width:600px){body{font-size:15px;line-height:1.8}.cross-cta-grid{grid-template-columns:repeat(2,1fr) !important}}
+@media print{.toggle,.stars-container,.cross-cta{display:none !important}}
 </style>
 </head>
 <body>
@@ -1758,7 +1761,18 @@ function selectSign(idx) {
     data.element==='fire'?'加班头疼、长期火气大、眼底充血、动不动磕碰':data.element==='earth'?'爱吃+不动 = 中年发福、三高、颈椎僵':data.element==='air'?'熬夜刷手机熬出咳嗽、颈椎、鼠标手、焦虑失眠':'容易抑郁焦虑、过敏、睡得多但醒来更累',
     data.element==='fire'?['每天必须喝够水+睡足 7 小时','运动选发汗的(跑步/HIIT/拳击),少做静态']:data.element==='earth'?['饭量减 1/4,饭后散步 20 分钟','嗓子不舒服别硬撑,熬夜+辛辣会反复发炎']:data.element==='air'?['戒烟戒电子烟,你这肺扛不住','睡前 1 小时不看手机,白噪音助眠']:['酒不要碰,代谢扛不住容易上瘾','有情绪问题尽早找心理咨询,别拖']);
 
-  detail.innerHTML = simpleHtml + profileHtml + personaHtml + soulHtml + compatHtml + fortuneHtml;
+  // ===== 子站间 CTA 引流 =====
+  const _ctaHtml = '<div class="card cross-cta" style="margin-top:24px;padding:20px 16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px">' +
+      '<div style="text-align:center;color:var(--gold);font-family:kai,serif;font-size:1.05em;letter-spacing:3px;margin-bottom:14px">寒山 · 洞见天机 · 你可能也想看</div>' +
+      '<div class="cross-cta-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">' +
+      ['<a href="https://hanshan36.com/site/fortune" style="display:block;padding:12px 8px;background:rgba(0,0,0,0.25);border:1px solid rgba(212,175,55,0.15);border-radius:10px;color:var(--text);text-decoration:none;text-align:center"><div style="font-size:1.3em">🔮</div><div style="font-size:0.85em;margin-top:4px">综合算命</div><div style="font-size:0.7em;color:var(--text-dim);margin-top:2px">个人八字</div></a>',
+       '<a href="https://hanshan36.com/site/marriage" style="display:block;padding:12px 8px;background:rgba(0,0,0,0.25);border:1px solid rgba(212,175,55,0.15);border-radius:10px;color:var(--text);text-decoration:none;text-align:center"><div style="font-size:1.3em">💑</div><div style="font-size:0.85em;margin-top:4px">八字合婚</div><div style="font-size:0.7em;color:var(--text-dim);margin-top:2px">两人匹配</div></a>',
+       '<a href="https://hanshan36.com/site/dating" style="display:block;padding:12px 8px;background:rgba(0,0,0,0.25);border:1px solid rgba(212,175,55,0.15);border-radius:10px;color:var(--text);text-decoration:none;text-align:center"><div style="font-size:1.3em">💖</div><div style="font-size:0.85em;margin-top:4px">缘分配对</div><div style="font-size:0.7em;color:var(--text-dim);margin-top:2px">男女朋友</div></a>',
+       '<a href="https://hanshan36.com/site/career" style="display:block;padding:12px 8px;background:rgba(0,0,0,0.25);border:1px solid rgba(212,175,55,0.15);border-radius:10px;color:var(--text);text-decoration:none;text-align:center"><div style="font-size:1.3em">🎯</div><div style="font-size:0.85em;margin-top:4px">前程算命</div><div style="font-size:0.7em;color:var(--text-dim);margin-top:2px">事业财运</div></a>',
+       '<a href="https://hanshan36.com/site/divination" style="display:block;padding:12px 8px;background:rgba(0,0,0,0.25);border:1px solid rgba(212,175,55,0.15);border-radius:10px;color:var(--text);text-decoration:none;text-align:center"><div style="font-size:1.3em">☯</div><div style="font-size:0.85em;margin-top:4px">周易卜卦</div><div style="font-size:0.7em;color:var(--text-dim);margin-top:2px">具体决策</div></a>'].join('') +
+      '</div></div>';
+
+  detail.innerHTML = simpleHtml + profileHtml + personaHtml + soulHtml + compatHtml + fortuneHtml + _ctaHtml;
   detail.classList.add('visible');
 
   // Initialize personality content
