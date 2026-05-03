@@ -2448,5 +2448,41 @@ function initStarCanvas() {
 window.addEventListener('DOMContentLoaded', init);
 
 </script>
+<!-- v2.5 保存为图片 (星座专用 — 容器是 signDetail,显示 class 是 visible) -->
+<button id="saveImgBtn" onclick="saveReportAsImage()" style="position:fixed;right:20px;bottom:20px;padding:14px 20px;background:linear-gradient(135deg,#D4AF37,#a08040);color:#080810;border:none;border-radius:30px;font-size:1em;font-weight:bold;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,0.5);z-index:9999;display:none;font-family:kai,serif;letter-spacing:2px">📥 保存为图片</button>
+<style>@keyframes _spin{to{transform:rotate(360deg)}}#saveImgBtn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,175,55,0.65)}@media(max-width:600px){#saveImgBtn{right:12px;bottom:12px;padding:10px 14px;font-size:0.88em}}</style>
+<script>
+async function saveReportAsImage(){
+    var btn=document.getElementById('saveImgBtn');
+    if(typeof html2canvas==='undefined'){
+        btn.disabled=true;btn.innerHTML='<span style="display:inline-block;width:14px;height:14px;border:2px solid #080810;border-top-color:transparent;border-radius:50%;animation:_spin 1s linear infinite;vertical-align:-2px"></span> 加载中...';
+        var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        s.onload=function(){btn.disabled=false;btn.innerHTML='📥 保存为图片';saveReportAsImage();};
+        s.onerror=function(){btn.disabled=false;btn.innerHTML='📥 保存为图片';alert('图片库加载失败,请检查网络');};
+        document.head.appendChild(s);return;
+    }
+    var ra=document.getElementById('signDetail');
+    if(!ra||!ra.classList.contains('visible')){alert('请先选择星座生成报告');return;}
+    btn.disabled=true;btn.innerHTML='<span style="display:inline-block;width:14px;height:14px;border:2px solid #080810;border-top-color:transparent;border-radius:50%;animation:_spin 1s linear infinite;vertical-align:-2px"></span> 生成中...';
+    try{
+        var wm=document.createElement('div');wm.id='_wmTemp';
+        wm.style.cssText='text-align:center;padding:20px 0;color:#8B7D3C;font-family:kai,serif;font-size:0.95em;letter-spacing:4px;border-top:1px solid rgba(212,175,55,0.2);margin-top:24px';
+        wm.innerHTML='寒山 · 星座运势 &nbsp;|&nbsp; hanshan36.com/app/horoscope';
+        ra.appendChild(wm);
+        await new Promise(function(r){setTimeout(r,200);});
+        var canvas=await html2canvas(ra,{backgroundColor:'#080810',scale:1.5,useCORS:true,logging:false,allowTaint:true,windowWidth:Math.max(900,document.documentElement.clientWidth)});
+        canvas.toBlob(function(blob){
+            var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;
+            a.download='寒山星座运势_'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'_'+Math.random().toString(36).slice(2,7)+'.png';
+            document.body.appendChild(a);a.click();document.body.removeChild(a);
+            setTimeout(function(){URL.revokeObjectURL(url);},5000);
+        },'image/png',0.92);
+    }catch(e){alert('保存失败:'+e.message);console.error(e);}finally{
+        var wm2=document.getElementById('_wmTemp');if(wm2)wm2.remove();
+        btn.disabled=false;btn.innerHTML='📥 保存为图片';
+    }
+}
+(function(){var ra=document.getElementById('signDetail'),btn=document.getElementById('saveImgBtn');if(!ra||!btn)return;new MutationObserver(function(){if(ra.classList.contains('visible'))btn.style.display='';else btn.style.display='none';}).observe(ra,{attributes:true,attributeFilter:['class']});})();
+</script>
 </body>
 </html>
