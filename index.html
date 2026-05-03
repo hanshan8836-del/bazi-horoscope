@@ -1724,6 +1724,27 @@ function selectSign(idx) {
   simpleHtml += '<div style="font-size:1.8em;font-family:kai,serif;color:var(--gold);font-weight:bold">'+_quick.tag.split('——')[0]+'</div>';
   simpleHtml += '<div style="margin-top:8px;color:var(--gold-dim);font-size:0.88em">今日运势 '+_todayScore+' 分 · '+_scoreHint+'</div>';
   simpleHtml += '</div>';
+  // 金句卡(本质定位)
+  const _ZODIAC_GOLDEN = {
+    aries: '冲得快也要刹得住',
+    taurus: '稳是本钱,变才有利息',
+    gemini: '深一点,留下来',
+    cancer: '情绪是讯号,不是真相',
+    leo: '别在面子上输了里子',
+    virgo: '完美是过程,不是身份',
+    libra: '决定快一点,纠结无用',
+    scorpio: '深爱可以,深陷不要',
+    sagittarius: '兑现承诺胜过承诺多',
+    capricorn: '稳上位也要会休息',
+    aquarius: '酷不是不需要人',
+    pisces: '边界感才是大爱'
+  };
+  const _zGoldenQuote = '这辈子的功课:' + (_ZODIAC_GOLDEN[key] || '走自己的路');
+  simpleHtml += '<div class="card fade-in" style="text-align:center;padding:22px 20px;background:linear-gradient(135deg,rgba(212,175,55,0.10),rgba(232,86,127,0.05));border:1px solid rgba(212,175,55,0.3);border-radius:14px;position:relative">';
+  simpleHtml += '<div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--bg-dark);padding:0 14px;color:var(--gold);font-family:kai,serif;font-size:0.82em;letter-spacing:4px">本 质 定 位</div>';
+  simpleHtml += '<div style="font-family:kai,serif;font-size:1.3em;color:var(--text);line-height:1.7;letter-spacing:1px">「' + _zGoldenQuote + '」</div>';
+  simpleHtml += '</div>';
+
   simpleHtml += '<div class="card fade-in" style="background:rgba(212,175,55,0.06);border-left:3px solid var(--gold);padding:12px 16px">';
   simpleHtml += '<div style="color:var(--gold);font-weight:bold;font-size:0.95em;margin-bottom:4px">📜 星座速读 · 6 大板块</div>';
   simpleHtml += '<div style="color:var(--text-dim);font-size:0.83em;line-height:1.6">下方先看 6 板块速读(总体/能量/事业/财运/爱情/健康),再看下面的"深度人格解析""灵魂使命""星座配对""运势预测"完整版。</div>';
